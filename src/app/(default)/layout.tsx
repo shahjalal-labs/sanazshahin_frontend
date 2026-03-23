@@ -1,6 +1,6 @@
 "use client";
 import Footer from "@/shared/Footer";
-import Navbar from "@/shared/Navbar";
+import Header from "@/shared/Navbar";
 import { ReactNode } from "react";
 
 interface LayoutProps {
@@ -10,7 +10,7 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="">
-      <Navbar />
+      <Header />
 
       <main style={{ minHeight: "calc(100vh - 360px)" }}>{children}</main>
       <Footer />
