@@ -1,5 +1,7 @@
+import AddToMealPlanFlow from "@/components/Home/AddToMealPlanFlow";
+import RecipeVideoCard from "@/components/Home/RecipeVideoCard";
 import { getRecipeById } from "@/lib/recipes";
-import { ArrowLeft, Play } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -26,7 +28,7 @@ export default async function RecipeDetailsPage({
 
   return (
     <section className="w-full  pb-12">
-      <div className="mx-auto w-full container px-4 py-6">
+      <div className="mx-auto w-full container px-4">
         <div className="mb-6 flex items-center justify-between">
           <Link
             href="/"
@@ -99,12 +101,11 @@ export default async function RecipeDetailsPage({
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                className={`${buttonClass} bg-[#11389D] text-white hover:bg-[#0D2D7E]`}
-              >
-                Add to Meal Plan
-              </button>
+              <AddToMealPlanFlow
+                title={recipe.detailTitle}
+                image={recipe.image}
+                buttonClassName={`${buttonClass} bg-[#11389D] text-white hover:bg-primary`}
+              />
               <button type="button" className={buttonClass}>
                 Make Now
               </button>
@@ -128,7 +129,7 @@ export default async function RecipeDetailsPage({
               <h3 className="mb-3 font-bold text-[#111111] text-xl">
                 Nutrition:
               </h3>
-              <p className="flex flex-wrap gap-x-3 gap-y-1 font-semibold leading-tight text-[#202020] [font-size:clamp(17px,1.4vw,27px)]">
+              <p className="flex flex-wrap gap-x-3 gap-y-1 font-semibold leading-tight text-[#202020] text-lg">
                 {recipe.nutrition.map((value) => (
                   <span key={value}>{value}</span>
                 ))}
@@ -137,7 +138,7 @@ export default async function RecipeDetailsPage({
           </div>
 
           <div>
-            <p className="mb-4 leading-tight text-[#585858] [font-size:clamp(20px,1.7vw,32px)]">
+            <p className="mb-4 leading-tight text-[#585858] text-lg">
               *Nutrition information provided is an estimate. It will vary based
               on cooking method and specific ingredients used.
             </p>
@@ -165,26 +166,12 @@ export default async function RecipeDetailsPage({
           </div>
         </div>
 
-        <div className="mt-10 max-w-[560px] overflow-hidden rounded-[30px]">
-          <a
-            href={recipe.videoUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="group relative block"
-            aria-label="Open recipe video"
-          >
-            <Image
-              src={recipe.videoThumbnail}
-              alt={`${recipe.detailTitle} video`}
-              width={560}
-              height={900}
-              className="h-auto w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/20 transition-colors group-hover:bg-black/30" />
-            <span className="absolute left-1/2 top-1/2 inline-flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-red-600 text-white shadow-xl">
-              <Play className="ml-1 h-10 w-10 fill-white" />
-            </span>
-          </a>
+        <div className="mt-10 lg:ml-auto lg:max-w-[560px]">
+          <RecipeVideoCard
+            title={recipe.detailTitle}
+            thumbnail={recipe.videoThumbnail}
+            videoUrl={recipe.videoUrl}
+          />
         </div>
       </div>
     </section>

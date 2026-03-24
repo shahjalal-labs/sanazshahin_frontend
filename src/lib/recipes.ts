@@ -1,8 +1,16 @@
+import image1 from "@/assets/r1.jpg";
+import image2 from "@/assets/r2.jpg";
+import image3 from "@/assets/r3.png";
+import image4 from "@/assets/r4.png";
+import image5 from "@/assets/r5.png";
+import image6 from "@/assets/r6.jpg";
+import type { StaticImageData } from "next/image";
+
 export interface Recipe {
   id: number;
   title: string;
   detailTitle: string;
-  image: string;
+  image: string | StaticImageData;
   serves: string;
   prepTime: string;
   extraTime: string;
@@ -20,8 +28,7 @@ export const recipes: Recipe[] = [
     id: 1,
     title: "Green Goddess Dill Salad\n(with black-eyed peas)",
     detailTitle: "Green Goddess Dill Salad",
-    image:
-      "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=1200&h=1200&fit=crop",
+    image: image1,
     serves: "2-3 large servings or 4 small side servings",
     prepTime: "10 min prep salad",
     extraTime: "20 min to bake chickpeas",
@@ -78,8 +85,7 @@ export const recipes: Recipe[] = [
     id: 2,
     title: "Kale Caesar Salad (vegan)",
     detailTitle: "Kale Caesar Salad (vegan)",
-    image:
-      "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200&h=1200&fit=crop",
+    image: image2,
     serves: "2-3 large servings or 4 small side servings",
     prepTime: "10 min to prep salad",
     extraTime: "20 min to bake chickpeas",
@@ -136,8 +142,7 @@ export const recipes: Recipe[] = [
     id: 3,
     title: "Popcorn in a Bag",
     detailTitle: "Popcorn in a Bag",
-    image:
-      "https://images.unsplash.com/photo-1599599810694-b5ac4dd13352?w=1200&h=1200&fit=crop",
+    image: image3,
     serves: "1-2 servings",
     prepTime: "5 min prep",
     extraTime: "8 min cook",
@@ -159,8 +164,7 @@ export const recipes: Recipe[] = [
     id: 4,
     title: "Sprouted Caesar Salad",
     detailTitle: "Sprouted Caesar Salad",
-    image:
-      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&h=1200&fit=crop",
+    image: image4,
     serves: "2 servings",
     prepTime: "15 min prep",
     extraTime: "5 min finish",
@@ -182,8 +186,7 @@ export const recipes: Recipe[] = [
     id: 5,
     title: "Pistachio Granola Bars",
     detailTitle: "Pistachio Granola Bars",
-    image:
-      "https://images.unsplash.com/photo-1599599810694-b5ac4dd13352?w=1200&h=1200&fit=crop",
+    image: image5,
     serves: "8 bars",
     prepTime: "10 min prep",
     extraTime: "25 min bake",
@@ -200,8 +203,7 @@ export const recipes: Recipe[] = [
     id: 6,
     title: "Chocolate Chip Oat Muffins\n(vegan + gluten-free)",
     detailTitle: "Chocolate Chip Oat Muffins (vegan + gluten-free)",
-    image:
-      "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=1200&h=1200&fit=crop",
+    image: image6,
     serves: "12 muffins",
     prepTime: "15 min prep",
     extraTime: "22 min bake",
