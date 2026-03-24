@@ -1,6 +1,5 @@
 "use client";
-import Footer from "@/shared/Footer";
-import Header from "@/shared/Navbar";
+import Sidebar from "@/shared/Sidebar";
 import { ReactNode } from "react";
 
 interface LayoutProps {
@@ -9,11 +8,16 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="">
-      <Header />
+    <div className="container mx-auto flex gap-6 px-4 pt-6 md:gap-10  md:pt-10">
+      <Sidebar />
 
-      <main style={{ minHeight: "calc(100vh - 360px)" }}>{children}</main>
-      <Footer />
+      <main
+        className="flex-1 overflow-auto"
+        style={{ minHeight: "calc(100vh - 360px)" }}
+      >
+        {children}
+      </main>
+      {/* <Footer /> */}
     </div>
   );
 };

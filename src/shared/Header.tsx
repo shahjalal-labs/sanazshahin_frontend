@@ -1,5 +1,6 @@
 "use client";
 
+import { useMobileNav } from "@/shared/MobileNavContext";
 import { useEffect, useRef, useState } from "react";
 
 // Icon components (inline SVGs to avoid external dependencies)
@@ -76,7 +77,7 @@ export default function Header() {
   const [searchValue, setSearchValue] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useMobileNav();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -93,8 +94,23 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!isMobileNavOpen) {
+      return;
+    }
+
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        closeMobileNav();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [closeMobileNav, isMobileNavOpen]);
+
   return (
-    <header className="w-full bg-white border-b border-gray-100 shadow-sm py-4">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm py-4">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-[72px] gap-4">
           {/* Logo */}
@@ -175,20 +191,23 @@ export default function Header() {
               )}
             </div>
 
-            {/* Mobile hamburger (optional) */}
-            {/* <button
-              className="sm:hidden p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
-              onClick={() => setMobileMenuOpen((v) => !v)}
-              aria-label="Open menu"
+            {/* Mobile hamburger */}
+            <button
+              className="md:hidden p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
+              onClick={toggleMobileNav}
+              aria-label={isMobileNavOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isMobileNavOpen}
             >
               <MenuIcon />
-            </button> */}
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Search Bar — shown when toggled */}
-        {mobileSearchOpen && (
-          <div className="sm:hidden pb-3">
+      {/* Mobile Search Bar — shown when toggled */}
+      {mobileSearchOpen && (
+        <div className="sm:hidden absolute left-0 right-0 top-full bg-white border-b border-gray-100 shadow-md">
+          <div className="container mx-auto px-4 py-3">
             <div className="flex items-center w-full border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm focus-within:ring-2 focus-within:ring-[#1a237e]/30 transition-all">
               <input
                 type="text"
@@ -206,8 +225,8 @@ export default function Header() {
               </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </header>
   );
 }
