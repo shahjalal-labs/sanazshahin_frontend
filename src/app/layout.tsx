@@ -4,7 +4,6 @@ import "./globals.css";
 // import logo from "@/assets/Logo.png";
 
 import ReduxProvider from "@/redux/ReduxProvider";
-import Header from "@/shared/Header";
 import { MobileNavProvider } from "@/shared/MobileNavContext";
 import { Toaster } from "sonner";
 // import logo from "@/assets/home/kkk-logo.png";
@@ -27,8 +26,8 @@ export default function RootLayout({
       <body className="antialiased">
         <ReduxProvider>
           <MobileNavProvider>
-            <Header />
-            <div className="pt-[104px]">{children}</div>
+            {/* <Header /> */}
+            <div className="">{children}</div>
           </MobileNavProvider>
         </ReduxProvider>
         <Toaster />

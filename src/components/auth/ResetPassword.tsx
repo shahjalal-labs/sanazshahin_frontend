@@ -3,9 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useResetPasswordMutation } from "@/redux/api/userApi";
-import Cookies from "js-cookie";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { CheckCheck, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { useState } from "react";
@@ -18,11 +16,9 @@ export default function ResetPassword() {
   });
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const [resetPasswordFn, { isLoading }] = useResetPasswordMutation();
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const router = useRouter();
-  const forgetToken = Cookies.get("forgetToken");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -39,21 +35,29 @@ export default function ResetPassword() {
       return;
     }
 
-    try {
-      const response = await resetPasswordFn({
-        newPassword: formData.newPassword,
-        forgetToken: forgetToken,
-      }).unwrap();
+    // try {
+    //   const response = await resetPasswordFn({
+    //     newPassword: formData.newPassword,
+    //     forgetToken: forgetToken,
+    //   }).unwrap();
 
-      if (response?.success) {
-        toast.success("Password has been reset successfully.");
-        router.push("/login");
-      } else {
-        toast.error("Failed to reset password. Please try again.");
-      }
-    } catch {
-      toast.error("An error occurred while resetting your password.");
-    }
+    //   if (response?.success) {
+    //     toast.success("Password has been reset successfully.");
+    //     router.push("/login");
+    //   } else {
+    //     toast.error("Failed to reset password. Please try again.");
+    //   }
+    // } catch {
+    //   toast.error("An error occurred while resetting your password.");
+
+    // }
+
+    setShowSuccessModal(true);
+  };
+
+  const handleDone = () => {
+    setShowSuccessModal(false);
+    router.push("/login");
   };
 
   return (
@@ -127,20 +131,51 @@ export default function ResetPassword() {
           {/* Submit Button */}
           <Button
             type="submit"
-            disabled={isLoading}
+            // disabled={isLoading}
             className="w-full bg-primary hover:bg-orange-600 text-white font-medium py-6 px-4 rounded-[12px] transition-colors flex items-center justify-center gap-2"
           >
-            {isLoading ? (
+            {/* {isLoading ? (
               <>
                 <Loader2 className="animate-spin h-5 w-5" />
                 Resetting...
               </>
             ) : (
               "Reset password"
-            )}
+            )} */}
+            Reset password
           </Button>
         </form>
       </div>
+
+      {showSuccessModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4 backdrop-blur-[2px]">
+          <div className="w-full max-w-[560px] rounded-[28px] bg-[#F9F9F9] px-7 py-10 shadow-2xl sm:px-11 sm:py-12">
+            <div className="mb-8 flex justify-center">
+              <div className="flex h-[86px] w-[86px] items-center justify-center rounded-full bg-[#DEE4F3]">
+                <div className="flex h-[58px] w-[58px] items-center justify-center rounded-full bg-[#C5D2F4]">
+                  <div className="flex h-[40px] w-[40px] items-center justify-center rounded-full bg-[#11389D] text-white">
+                    <CheckCheck className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2 className="mb-8 text-center text-3xl font-semibold leading-tight text-[#202020] sm:text-[42px]">
+              Password Changed
+              <br />
+              Successfully
+            </h2>
+
+            <button
+              type="button"
+              onClick={handleDone}
+              className="inline-flex h-14 w-full items-center justify-center rounded-full bg-[#11389D] text-lg font-semibold text-white transition-colors hover:bg-[#0E3188]"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

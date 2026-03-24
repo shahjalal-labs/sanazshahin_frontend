@@ -1,6 +1,7 @@
 "use client";
 
 import { useMobileNav } from "@/shared/MobileNavContext";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 // Icon components (inline SVGs to avoid external dependencies)
@@ -114,11 +115,13 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-[72px] gap-4">
           {/* Logo */}
-          <div className="flex-shrink-0">
-            <span className="text-primary font-extrabold text-lg tracking-wide uppercase select-none">
-              MY HEADER
-            </span>
-          </div>
+          <Link href={"/"}>
+            <div className="flex-shrink-0">
+              <span className="text-primary font-extrabold text-lg tracking-wide uppercase select-none">
+                MY HEADER
+              </span>
+            </div>
+          </Link>
 
           {/* Search Bar — hidden on mobile, visible on sm+ */}
           <div className="hidden sm:flex flex-1 max-w-md mx-auto">
@@ -174,19 +177,24 @@ export default function Header() {
               {/* Dropdown */}
               {dropdownOpen && (
                 <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50 animate-fade-in">
-                  <button
-                    className="w-full px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left font-medium"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    Log in
-                  </button>
+                  <Link href="/login">
+                    {" "}
+                    <button
+                      className="w-full px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left font-medium"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Log in
+                    </button>
+                  </Link>
                   <div className="h-px bg-gray-100 mx-3" />
-                  <button
-                    className="w-full px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left font-medium"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    Sign Up
-                  </button>
+                  <Link href="/signup">
+                    <button
+                      className="w-full px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left font-medium"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Sign Up
+                    </button>
+                  </Link>
                 </div>
               )}
             </div>

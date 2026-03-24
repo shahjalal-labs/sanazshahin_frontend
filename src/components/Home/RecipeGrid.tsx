@@ -68,7 +68,7 @@ export default function RecipeGrid() {
   ];
 
   return (
-    <div className="w-full">
+    <div className="w-full pt-[104px]">
       {/* Header Section */}
       <div>
         <div className="mx-auto container px-4">

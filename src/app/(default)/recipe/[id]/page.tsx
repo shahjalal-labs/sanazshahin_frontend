@@ -27,7 +27,7 @@ export default async function RecipeDetailsPage({
   }
 
   return (
-    <section className="w-full  pb-12">
+    <section className="w-full  pb-12 pt-[104px]">
       <div className="mx-auto w-full container px-4">
         <div className="mb-6 flex items-center justify-between">
           <Link

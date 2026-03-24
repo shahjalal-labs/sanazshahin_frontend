@@ -76,7 +76,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className="hidden md:flex md:w-64 md:flex-col">
+      <aside className="hidden md:flex md:w-64 md:flex-col pt-[104px]">
         <nav className="flex-1 space-y-2">
           {navItems.map((item) => {
             const isActive = pathname === item.href;

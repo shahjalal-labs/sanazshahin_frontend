@@ -16,7 +16,7 @@ export default function VerifyOTPPage() {
   const email = params.get("email");
   const router = useRouter();
 
-  const [verifyOtpFn, { isLoading }] = useResetPasswordVerifyOtpMutation();
+  // const [verifyOtpFn, { isLoading }] = useResetPasswordVerifyOtpMutation();
 
   const handleInputChange = (index: number, value: string) => {
     if (value.length > 1) return; // Prevent multiple characters
@@ -50,21 +50,24 @@ export default function VerifyOTPPage() {
       return;
     }
 
-    try {
-      const response = await verifyOtpFn({ email, otp: otpCode }).unwrap();
+    // try {
+    //   const response = await verifyOtpFn({ email, otp: otpCode }).unwrap();
 
-      if (response?.success) {
-        toast.success(
-          "OTP verified successfully. You can now reset your password."
-        );
-        router.push(`/reset-password`);
-        Cookies.set("forgetToken", response?.result?.forgetToken);
-      } else {
-        toast.error("Invalid OTP. Please try again.");
-      }
-    } catch  {
-      toast.error("Failed to verify OTP. Please try again later.");
-    }
+    //   if (response?.success) {
+    //     toast.success(
+    //       "OTP verified successfully. You can now reset your password."
+    //     );
+    //     router.push(`/reset-password`);
+    //     Cookies.set("forgetToken", response?.result?.forgetToken);
+    //   } else {
+    //     toast.error("Invalid OTP. Please try again.");
+    //   }
+    // } catch  {
+    //   toast.error("Failed to verify OTP. Please try again later.");
+
+    router.push(`/reset-password`);
+  
+    // }
   };
 
   return (
@@ -99,17 +102,18 @@ export default function VerifyOTPPage() {
 
           <Button
             type="submit"
-            disabled={isLoading}
+            // disabled={isLoading}
             className="w-full bg-primary hover:bg-orange-600 text-white font-medium py-6 px-4 rounded-[40px] transition-colors flex items-center justify-center gap-2"
           >
-            {isLoading ? (
+            {/* {isLoading ? (
               <>
                 <Loader2 className="animate-spin h-5 w-5" />
                 Verifying...
               </>
             ) : (
               "Submit"
-            )}
+            )} */}
+            Submit
           </Button>
 
           <div className="text-center">

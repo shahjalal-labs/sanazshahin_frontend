@@ -13,23 +13,25 @@ import { toast } from "sonner";
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
 
-  const [resetPasswordFn, { isLoading }] = useResetPasswordSentOtpMutation();
+  // const [resetPasswordFn, { isLoading }] = useResetPasswordSentOtpMutation();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const response = await resetPasswordFn({email: email}).unwrap();
+    // try {
+    //   const response = await resetPasswordFn({email: email}).unwrap();
 
-      if (response?.success) {
-        toast.success("A verification code has been sent to your email.");
-        router.push(`/verify-otp?email=${email}`);
-      } else {
-        toast.error("Something went wrong. Please try again.");
-      }
-    } catch  {
-      toast.error("Failed to send verification code. Please check your email.");
-    }
+    //   if (response?.success) {
+    //     toast.success("A verification code has been sent to your email.");
+    //     router.push(`/verify-otp?email=${email}`);
+    //   } else {
+    //     toast.error("Something went wrong. Please try again.");
+    //   }
+    // } catch  {
+    //   toast.error("Failed to send verification code. Please check your email.");
+    // }
+
+    router.push(`/verify-otp?email=${email}`);
   };
 
   return (
@@ -73,17 +75,19 @@ export default function ForgotPassword() {
 
           <Button
             type="submit"
-            disabled={isLoading}
+            // disabled={isLoading}
             className="w-full bg-primary text-white font-medium py-6 px-4 rounded-[40px] transition-colors flex items-center justify-center gap-2"
           >
-            {isLoading ? (
+            {/* {isLoading ? (
               <>
                 <Loader2 className="animate-spin h-5 w-5" />
                 Sending...
               </>
             ) : (
               "Send Code"
-            )}
+            )} */}
+
+            Send Code
           </Button>
 
           <div className="text-center">

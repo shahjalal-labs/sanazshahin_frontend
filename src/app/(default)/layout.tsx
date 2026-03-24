@@ -1,4 +1,5 @@
 "use client";
+import Header from "@/shared/Header";
 import Sidebar from "@/shared/Sidebar";
 import { ReactNode } from "react";
 
@@ -8,6 +9,8 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
+   <>
+     <Header />
     <div className="container mx-auto flex gap-6 px-4 pt-6 md:gap-10  md:pt-10">
       <Sidebar />
 
@@ -19,6 +22,7 @@ const Layout = ({ children }: LayoutProps) => {
       </main>
       {/* <Footer /> */}
     </div>
+   </>
   );
 };
 

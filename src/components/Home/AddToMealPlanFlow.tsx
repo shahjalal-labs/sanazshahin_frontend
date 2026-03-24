@@ -155,7 +155,7 @@ export default function AddToMealPlanFlow({
                     <span
                       className={`ml-auto inline-flex h-8 w-8 items-center justify-center rounded-full border-2 ${
                         isActive
-                          ? "border-[#11389D] bg-[#11389D] text-white"
+                          ? "border-[#11389D] bg-primary text-white"
                           : "border-[#11389D] text-transparent"
                       }`}
                       aria-hidden="true"
@@ -192,7 +192,7 @@ export default function AddToMealPlanFlow({
                     );
                   }
                 }}
-                className="inline-flex h-14 items-center justify-center rounded-full bg-[#11389D] text-xl leading-none text-white sm:text-[34px]"
+                className="inline-flex h-14 items-center justify-center rounded-full bg-primary text-xl leading-none text-white sm:text-[34px]"
               >
                 Done
               </button>
@@ -314,9 +314,9 @@ export default function AddToMealPlanFlow({
                           return [...prev, new Date(date)];
                         });
                       }}
-                      className={`mx-auto inline-flex h-9 w-9 items-center justify-center rounded-full text-sm transition-colors sm:text-[30px] ${
+                      className={`mx-auto inline-flex h-10 w-10 items-center justify-center rounded-full text-sm transition-colors sm:text-[30px] ${
                         isSelected
-                          ? "bg-[#11389D] text-white"
+                          ? "bg-primary text-white"
                           : isCurrentMonth
                             ? "text-[#1A1A1A] hover:bg-[#E8EEFF]"
                             : "text-[#A8AFBC] hover:bg-[#EEF2F8]"
@@ -341,7 +341,7 @@ export default function AddToMealPlanFlow({
               <button
                 type="button"
                 onClick={() => setIsGeneratedOpen(false)}
-                className="inline-flex h-14 items-center justify-center rounded-full bg-[#11389D] px-4 text-base leading-none text-white sm:text-[34px]"
+                className="inline-flex h-14 items-center justify-center rounded-full bg-primary px-4 text-base leading-none text-white sm:text-[34px]"
               >
                 Select & Confirm
               </button>
