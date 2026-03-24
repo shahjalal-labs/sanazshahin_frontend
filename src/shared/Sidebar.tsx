@@ -110,7 +110,7 @@ export default function Sidebar() {
 
       <aside
         className={cn(
-          "fixed left-0 top-[104px] z-[60] h-[calc(100dvh-104px)] w-[280px] bg-white p-4 shadow-2xl transition-transform duration-300 ease-out md:hidden",
+          "fixed left-0  z-[60] h-[calc(100dvh-0px)] w-[280px] bg-white p-4 shadow-2xl transition-transform duration-300 ease-out md:hidden",
           isMobileNavOpen ? "translate-x-0" : "-translate-x-full",
         )}
         aria-label="Mobile navigation"
