@@ -128,7 +128,7 @@ export default function RecipeGrid() {
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
                     className="object-cover transition-transform duration-300 hover:scale-[1.03]"
                   />
-                  <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(45deg,rgba(0,0,0,0.1)_0%,rgba(0,0,0,0.8)_100%)]" />
+                  <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.1)_0%,rgba(0,0,0,0.3)_100%)]" />
                   {/* Save Button */}
                   <button
                     onClick={(event) => {
