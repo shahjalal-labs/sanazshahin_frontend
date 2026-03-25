@@ -1,0 +1,157 @@
+"use client";
+import { Editor } from "@tinymce/tinymce-react";
+import { X } from "lucide-react";
+import { useMemo, useState } from "react";
+
+type RecipeAddModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+};
+
+function RecipeAddModal({ isOpen, onClose }: RecipeAddModalProps) {
+  if (!isOpen) {
+    return null;
+  }
+
+  const editorConfig = useMemo(
+    () => ({
+      plugins:
+        "advlist autolink link image lists charmap preview anchor pagebreak " +
+        "searchreplace wordcount visualblocks code fullscreen insertdatetime media " +
+        "table emoticons help",
+      toolbar:
+        "undo redo | styles | bold italic | alignleft aligncenter alignright alignjustify | " +
+        "bullist numlist outdent indent | link image | preview media fullscreen | " +
+        "forecolor backcolor emoticons | help",
+      menubar: "",
+      content_style:
+        "body { font-family:Helvetica,Arial,sans-serif; font-size:16px }",
+      height: 280,
+    }),
+    [],
+  );
+
+  const [needsContent, setNeedsContent] = useState<string>("");
+  const [nutritionContent, setNutritionContent] = useState<string>("");
+  const [howToContent, setHowToContent] = useState<string>("");
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 backdrop-blur-sm p-3 md:items-center md:p-6"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-[980px] rounded-[14px] bg-white p-4 shadow-xl md:p-7"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="mb-6 flex items-center justify-between md:mb-8">
+          <h3 className="text-[28px] font-semibold text-[#121212] md:text-[32px]">
+            Add New Recipe
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F0F2F5] text-[#5F6773] transition hover:bg-[#E4E7EB]"
+            aria-label="Close modal"
+          >
+            <X className="h-5 w-5" strokeWidth={2.25} />
+          </button>
+        </div>
+
+        <form
+          className="max-h-[76vh] overflow-y-auto pr-1"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onClose();
+          }}
+        >
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
+            <AddInput label="Recipe Name" placeholder="Enter meal name" />
+            <AddInput label="Duration" placeholder="Enter duration" />
+            <AddInput label="Energy (kcal)" placeholder="Enter Energy (kcal)" />
+            <AddInput label="Features" placeholder="Enter Features" />
+          </div>
+
+          <div className="space-y-2 mt-4">
+            <label className="block font-medium text-[#374151] text-[20px]">
+              What You'll Need
+            </label>
+            <Editor
+              apiKey="4kjrncewwa4057zz04om0mle4q3to49bypq57bh6qgq5f0n3"
+              value={needsContent}
+              init={editorConfig}
+              onEditorChange={setNeedsContent}
+            />
+          </div>
+
+          <div className="space-y-2 mt-4">
+            <label className="block font-medium text-[#374151] text-[20px]">
+              Nutrition
+            </label>
+            <Editor
+              apiKey="4kjrncewwa4057zz04om0mle4q3to49bypq57bh6qgq5f0n3"
+              value={nutritionContent}
+              init={editorConfig}
+              onEditorChange={setNutritionContent}
+            />
+          </div>
+
+          <div className="space-y-2 mt-4">
+            <label className="block font-medium text-[#374151] text-[20px]">
+              How You'll Make It
+            </label>
+            <Editor
+              apiKey="4kjrncewwa4057zz04om0mle4q3to49bypq57bh6qgq5f0n3"
+              value={howToContent}
+              init={editorConfig}
+              onEditorChange={setHowToContent}
+            />
+          </div>
+
+          <div className="mt-4">
+            <label className="mb-2 block text-[20px] font-medium text-[#111111] md:text-[22px]">
+              Youtube link
+            </label>
+            <input
+              type="text"
+              placeholder="Enter Youtube link"
+              className="h-[64px] w-full rounded-[26px] border border-[#C9D2E2] bg-[#FAFCFF] px-5 text-[20px] text-[#111111] outline-none placeholder:text-[#A4B2C7] focus:border-[#8FA4CF] md:h-[70px] md:text-[22px]"
+            />
+          </div>
+
+          <div className="mt-8 flex justify-center md:justify-end">
+            <button
+              type="submit"
+              className="h-11 min-w-[130px] rounded-full bg-primary px-9 text-[16px] font-medium text-white"
+            >
+              Submit
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function AddInput({
+  label,
+  placeholder,
+}: {
+  label: string;
+  placeholder: string;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-[20px] font-medium text-[#111111] md:text-[22px]">
+        {label}
+      </label>
+      <input
+        type="text"
+        placeholder={placeholder}
+        className="h-[64px] w-full rounded-[26px] border border-[#C9D2E2] bg-[#FAFCFF] px-5 text-[20px] text-[#111111] outline-none placeholder:text-[#A4B2C7] focus:border-[#8FA4CF] md:h-[70px] md:text-[22px]"
+      />
+    </div>
+  );
+}
+
+export default RecipeAddModal;

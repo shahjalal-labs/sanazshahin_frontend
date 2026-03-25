@@ -6,6 +6,7 @@ import m3 from "@/assets/meal/m3.jpg";
 import m4 from "@/assets/meal/m4.jpg";
 import m5 from "@/assets/meal/m5.jpg";
 import m7 from "@/assets/meal/m7.png";
+import RecipeAddModal from "@/components/MyRecipeBox/RecipeAddModal";
 import RecipeEditModal from "@/components/MyRecipeBox/RecipeEditModal";
 import { ChevronDown, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import Image, { StaticImageData } from "next/image";
@@ -91,6 +92,7 @@ const recipeList: RecipeItem[] = [
 function RecipeBox() {
   const [selectedRecipe, setSelectedRecipe] = useState<RecipeItem | null>(null);
   const [editingRecipe, setEditingRecipe] = useState<RecipeItem | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const handleOpenEditModal = (recipe: RecipeItem) => {
     setSelectedRecipe(null);
@@ -112,6 +114,7 @@ function RecipeBox() {
 
             <button
               type="button"
+              onClick={() => setIsAddModalOpen(true)}
               className="inline-flex h-[42px] w-[42px] items-center justify-center rounded-[10px] border border-[#D0D5DD] bg-[#F7F8FA] text-[#5F6773] transition hover:bg-[#EEF1F5]"
               aria-label="Add recipe"
             >
@@ -190,6 +193,11 @@ function RecipeBox() {
       <RecipeEditModal
         recipe={editingRecipe}
         onClose={() => setEditingRecipe(null)}
+      />
+
+      <RecipeAddModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
       />
     </>
   );

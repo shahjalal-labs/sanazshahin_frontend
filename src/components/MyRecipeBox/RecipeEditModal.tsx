@@ -1,5 +1,6 @@
 "use client";
 import { Editor } from "@tinymce/tinymce-react";
+import { X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 type RecipeEditDetails = {
   duration: string;
@@ -65,12 +66,22 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
         className="w-full max-w-[980px] rounded-[14px] bg-white p-4 shadow-xl md:p-7"
         onClick={(event) => event.stopPropagation()}
       >
-        <h3 className="mb-6 text-[28px] font-semibold text-[#121212] md:mb-8 md:text-[42px]">
-          Recipe Box Edit
-        </h3>
+        <div className="mb-6 flex items-center justify-between md:mb-8">
+          <h3 className="text-[28px] font-semibold text-[#121212] md:text-[32px]">
+            Recipe Box Edit
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#F0F2F5] text-[#5F6773] transition hover:bg-[#E4E7EB]"
+            aria-label="Close modal"
+          >
+            <X className="h-5 w-5" strokeWidth={2.25} />
+          </button>
+        </div>
 
         <form
-          className="max-h-[64vh] overflow-y-auto pr-1"
+          className="max-h-[76vh] overflow-y-auto pr-1"
           onSubmit={(event) => {
             event.preventDefault();
             onClose();
@@ -99,8 +110,8 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="block font-medium text-[#374151]">
+          <div className="space-y-2 mt-4">
+            <label className="block font-medium text-[#374151] text-[20px]">
               What You’ll Need
             </label>
             <Editor
@@ -111,8 +122,8 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="block font-medium text-[#374151]">
+          <div className="space-y-2 mt-4">
+            <label className="block font-medium text-[#374151] text-[20px]">
               Nutrition
             </label>
             <Editor
@@ -123,8 +134,8 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="block font-medium text-[#374151]">
+          <div className="space-y-2 mt-4">
+            <label className="block font-medium text-[#374151] text-[20px]">
               How You'll Make It
             </label>
             <Editor
@@ -150,7 +161,7 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
           <div className="mt-8 flex justify-center md:justify-end">
             <button
               type="submit"
-              className="h-11 min-w-[130px] rounded-full bg-[#0F2FA8] px-9 text-[16px] font-medium text-white"
+              className="h-11 min-w-[130px] rounded-full bg-primary px-9 text-[16px] font-medium text-white"
             >
               Submit
             </button>
