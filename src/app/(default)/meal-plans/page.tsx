@@ -1,11 +1,11 @@
-import React from 'react'
+import MealPlan from "@/components/MealPlan/MealPlan";
 
 function page() {
   return (
-    <div className='pt-[104px] text-green-900 font-bold text-[30px] text-center'>
-        Comming Soon...
+    <div className="pt-[104px]">
+      <MealPlan />
     </div>
-  )
+  );
 }
 
-export default page
+export default page;
