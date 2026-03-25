@@ -7,9 +7,17 @@ import m4 from "@/assets/meal/m4.jpg";
 import m5 from "@/assets/meal/m5.jpg";
 import m6 from "@/assets/meal/m6.jpg";
 import m7 from "@/assets/meal/m7.png";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Coffee,
+  RefreshCw,
+  Soup,
+  UtensilsCrossed,
+} from "lucide-react";
 import Image, { StaticImageData } from "next/image";
-import { useMemo, useState } from "react";
+import { ComponentType, ReactNode, useMemo, useState } from "react";
 
 type MealKey =
   | "kale-salad"
@@ -25,6 +33,15 @@ type MealKey =
 type MealCatalogItem = {
   title: string;
   image: StaticImageData;
+  nutrition: {
+    fiber: number;
+    fat: number;
+    carb: number;
+    iron: number;
+    protein: number;
+    calorie: number;
+    duration: string;
+  };
 };
 
 type MealPlanEntry = {
@@ -35,16 +52,127 @@ type MealPlanEntry = {
 
 const WEEK_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+const MEAL_TABLE_GRID_CLASS =
+  "grid min-w-[920px] grid-cols-[260px_repeat(6,minmax(74px,1fr))_130px] items-center gap-x-2";
+
 const mealCatalog: Record<MealKey, MealCatalogItem> = {
-  "kale-salad": { title: "Kale Caesar Salad", image: m1 },
-  "bbq-tofu": { title: "BBQ Tofu", image: m2 },
-  quinoa: { title: "Quinoa Vegetable", image: m3 },
-  tortilla: { title: "Tortilla", image: m4 },
-  oatmeal: { title: "Orange Oatmeal", image: m5 },
-  "oat-milk": { title: "Oat Milk", image: m6 },
-  popcorn: { title: "Popcorn in a Bag", image: m7 },
-  barley: { title: "Barley Soup", image: m7 },
-  pistachio: { title: "Pistachio Granola..", image: m3 },
+  "kale-salad": {
+    title: "Kale Caesar Salad",
+    image: m1,
+    nutrition: {
+      fiber: 30,
+      fat: 30,
+      carb: 30,
+      iron: 120,
+      protein: 180,
+      calorie: 1000,
+      duration: "2 days",
+    },
+  },
+  "bbq-tofu": {
+    title: "BBQ Tofu",
+    image: m2,
+    nutrition: {
+      fiber: 20,
+      fat: 20,
+      carb: 20,
+      iron: 100,
+      protein: 160,
+      calorie: 920,
+      duration: "2 days",
+    },
+  },
+  quinoa: {
+    title: "Quinoa Vegetable",
+    image: m3,
+    nutrition: {
+      fiber: 24,
+      fat: 18,
+      carb: 26,
+      iron: 110,
+      protein: 145,
+      calorie: 860,
+      duration: "2 days",
+    },
+  },
+  tortilla: {
+    title: "Tortilla",
+    image: m4,
+    nutrition: {
+      fiber: 20,
+      fat: 20,
+      carb: 20,
+      iron: 100,
+      protein: 160,
+      calorie: 920,
+      duration: "2 days",
+    },
+  },
+  oatmeal: {
+    title: "Orange Oatmeal",
+    image: m5,
+    nutrition: {
+      fiber: 18,
+      fat: 15,
+      carb: 22,
+      iron: 90,
+      protein: 120,
+      calorie: 780,
+      duration: "2 days",
+    },
+  },
+  "oat-milk": {
+    title: "Oat Milk",
+    image: m6,
+    nutrition: {
+      fiber: 12,
+      fat: 10,
+      carb: 16,
+      iron: 84,
+      protein: 92,
+      calorie: 510,
+      duration: "2 days",
+    },
+  },
+  popcorn: {
+    title: "Popcorn in a Bag",
+    image: m7,
+    nutrition: {
+      fiber: 20,
+      fat: 30,
+      carb: 20,
+      iron: 120,
+      protein: 160,
+      calorie: 950,
+      duration: "2 days",
+    },
+  },
+  barley: {
+    title: "Barley Soup",
+    image: m7,
+    nutrition: {
+      fiber: 21,
+      fat: 17,
+      carb: 23,
+      iron: 96,
+      protein: 130,
+      calorie: 810,
+      duration: "2 days",
+    },
+  },
+  pistachio: {
+    title: "Pistachio Granola..",
+    image: m3,
+    nutrition: {
+      fiber: 22,
+      fat: 19,
+      carb: 24,
+      iron: 98,
+      protein: 138,
+      calorie: 840,
+      duration: "2 days",
+    },
+  },
 };
 
 const planSequence: MealKey[] = [
@@ -95,9 +223,22 @@ const createInitialEntries = (): MealPlanEntry[] => {
 
 const formatISODate = (date: Date) => date.toISOString().split("T")[0];
 
+const formatDisplayDate = (isoDate: string) => {
+  const date = new Date(`${isoDate}T00:00:00`);
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
+};
+
 function MealPlan() {
   const [currentMonth, setCurrentMonth] = useState(new Date(2026, 0, 1));
   const [selectedDate, setSelectedDate] = useState("2026-01-04");
+  const breakfastMealKeys: MealKey[] = ["kale-salad", "tortilla", "popcorn"];
+  const [selectedBreakfastMeal, setSelectedBreakfastMeal] =
+    useState<MealKey>("kale-salad");
 
   const planEntries = useMemo(() => createInitialEntries(), []);
 
@@ -153,6 +294,11 @@ function MealPlan() {
       (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1),
     );
   };
+
+  const selectedEntry = entryByDate[selectedDate];
+  const selectedMeal = selectedEntry
+    ? mealCatalog[selectedEntry.mealKey]
+    : null;
 
   return (
     <section className="mx-auto w-full container px-4 pb-12 ">
@@ -210,7 +356,7 @@ function MealPlan() {
                   onClick={() => setSelectedDate(isoDate)}
                   className={`flex min-h-[195px] flex-col border-t border-b border-l border-[#EDEEF1] bg-white p-3 text-left transition shadow-md ${
                     isSelected
-                      ? "relative z-[1] border border-[#5072C7] shadow-[inset_0_0_0_1px_#5072C7]"
+                      ? "relative z-[1] border border-[#0A2D9E] ring-2 ring-[#0A2D9E]/25"
                       : ""
                   }`}
                 >
@@ -260,7 +406,194 @@ function MealPlan() {
           </div>
         </div>
       </div>
+
+      {selectedEntry && selectedMeal ? (
+        <div className="mt-8 rounded-[12px]  p-4 md:p-6">
+          <h2 className="text-xl font-semibold leading-none text-[#141414]">
+            Meal Plan
+            <span className="ml-1 text-xl font-medium text-[#79808E]">
+              ({formatDisplayDate(selectedDate)})
+            </span>
+          </h2>
+
+          <div className="mt-5 overflow-x-auto rounded-[10px] border border-[#E7E8EC] bg-white shadow-sm">
+            <div
+              className={`${MEAL_TABLE_GRID_CLASS} px-4 py-3 text-xl font-semibold text-[#79808E]`}
+            >
+              <p>Name</p>
+              <p>Fiber</p>
+              <p>Fat</p>
+              <p>Carb</p>
+              <p>Iron</p>
+              <p>Protein</p>
+              <p>Calorie</p>
+              <p>Duration</p>
+            </div>
+          </div>
+
+          <div className="mt-4 overflow-x-auto rounded-[10px] bg-[#E9EAED] px-4 py-4">
+            <div
+              className={`${MEAL_TABLE_GRID_CLASS} text-xl font-semibold text-[#4D525D]`}
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="relative h-9 w-9 overflow-hidden rounded-[6px] border border-[#B3BEDA]">
+                  <Image
+                    src={selectedMeal.image}
+                    alt={selectedMeal.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <p className="truncate whitespace-nowrap">
+                  {selectedMeal.title}
+                </p>
+              </div>
+              <p>{selectedMeal.nutrition.fiber}</p>
+              <p>{selectedMeal.nutrition.fat}</p>
+              <p>{selectedMeal.nutrition.carb}</p>
+              <p>{selectedMeal.nutrition.iron}</p>
+              <p>{selectedMeal.nutrition.protein}</p>
+              <p>{selectedMeal.nutrition.calorie}</p>
+              <div className="flex items-center gap-2">
+                <span>{selectedMeal.nutrition.duration}</span>
+                <CalendarDays className="h-5 w-5 text-[#545B67]" />
+              </div>
+            </div>
+          </div>
+
+          <MealCategoryBlock title="Breakfast" icon={Coffee}>
+            {breakfastMealKeys.map((mealKey) => (
+              <MealListRow
+                key={mealKey}
+                meal={mealCatalog[mealKey]}
+                checked={selectedBreakfastMeal === mealKey}
+                highlighted={selectedBreakfastMeal === mealKey}
+                onSelect={() => setSelectedBreakfastMeal(mealKey)}
+              />
+            ))}
+          </MealCategoryBlock>
+
+          <div className="mt-3 flex justify-end">
+            <button
+              type="button"
+              className="h-10 rounded-full bg-[#0A2D9E] px-5 text-base font-semibold text-white"
+            >
+              + Replace Meal
+            </button>
+          </div>
+
+          <MealCategoryHeader title="Lunch" icon={UtensilsCrossed} />
+          <MealCategoryHeader title="Dinner" icon={Soup} />
+        </div>
+      ) : null}
     </section>
+  );
+}
+
+function MealCategoryHeader({
+  title,
+  icon: Icon,
+}: {
+  title: string;
+  icon: ComponentType<{ className?: string }>;
+}) {
+  return (
+    <div className="mt-4 flex items-center justify-between rounded-[10px] bg-[#E9EAED] px-4 py-3">
+      <div className="flex items-center gap-2 text-xl font-semibold text-[#434851]">
+        <Icon className="h-6 w-6" />
+        <span>{title}</span>
+      </div>
+      <button
+        type="button"
+        className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-base font-semibold text-white"
+      >
+        <RefreshCw className="h-4 w-4" />
+        Regenerate
+      </button>
+    </div>
+  );
+}
+
+function MealCategoryBlock({
+  title,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  icon: ComponentType<{ className?: string }>;
+  children: ReactNode;
+}) {
+  return (
+    <div className="mt-4 overflow-x-auto rounded-[10px] bg-[#E9EAED]">
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-2 text-xl font-semibold text-[#434851]">
+          <Icon className="h-6 w-6" />
+          <span>{title}</span>
+        </div>
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-base font-semibold text-white"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Regenerate
+        </button>
+      </div>
+      <div className="min-w-[920px] border-t border-[#D6DAE0] bg-[#F2F3F5]">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function MealListRow({
+  meal,
+  checked = false,
+  highlighted = false,
+  onSelect,
+}: {
+  meal: MealCatalogItem;
+  checked?: boolean;
+  highlighted?: boolean;
+  onSelect?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`${MEAL_TABLE_GRID_CLASS} w-full border-b border-[#D8DCE3] px-4 py-3 text-xl font-semibold text-[#4D525D] ${
+        highlighted
+          ? "relative z-[1] bg-[#E6E8EC] ring-2 ring-inset ring-[#0A2D9E]"
+          : "hover:bg-[#ECEEF2]"
+      }`}
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <input
+          type="checkbox"
+          checked={checked}
+          readOnly
+          className="h-5 w-5 rounded border-[#59606B]"
+        />
+        <div className="relative h-9 w-9 overflow-hidden rounded-[6px] border border-[#B3BEDA]">
+          <Image
+            src={meal.image}
+            alt={meal.title}
+            fill
+            className="object-cover"
+          />
+        </div>
+        <p className="truncate whitespace-nowrap">{meal.title}</p>
+      </div>
+      <p>{meal.nutrition.fiber}</p>
+      <p>{meal.nutrition.fat}</p>
+      <p>{meal.nutrition.carb}</p>
+      <p>{meal.nutrition.iron}</p>
+      <p>{meal.nutrition.protein}</p>
+      <p>{meal.nutrition.calorie}</p>
+      <div className="flex items-center gap-2">
+        <span>{meal.nutrition.duration}</span>
+        <CalendarDays className="h-5 w-5 text-[#545B67]" />
+      </div>
+    </button>
   );
 }
 

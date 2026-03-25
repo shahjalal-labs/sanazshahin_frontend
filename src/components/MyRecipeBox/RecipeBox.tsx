@@ -147,7 +147,7 @@ function RecipeBox() {
           ))}
         </div>
 
-        <div className="mt-10 flex items-center justify-center gap-3 text-sm font-semibold text-[#5C6470]">
+        <div className="mt-10 flex items-center justify-end gap-3 text-sm font-semibold text-[#5C6470]">
           <button
             type="button"
             className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#FCEBFA] text-[#D36BC0] transition hover:bg-[#F9DDF4]"
