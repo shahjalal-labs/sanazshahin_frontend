@@ -301,13 +301,13 @@ function MealPlan() {
     : null;
 
   return (
-    <section className="mx-auto w-full container px-4 pb-12 ">
-      <div className="mb-5 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#111111] md:text-[42px] md:leading-[1.1]">
+    <section className="mx-auto container w-full px-3 pb-12 sm:px-4">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <h1 className="text-[28px] font-bold text-[#111111] leading-[1.1] sm:text-[34px] md:text-[42px] md:leading-[1.1]">
           {currentMonthLabel}
         </h1>
 
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <button
             type="button"
             onClick={previousMonth}
@@ -327,13 +327,13 @@ function MealPlan() {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-sm ">
-        <div className="">
+      <div className="overflow-x-auto rounded-sm">
+        <div className="min-w-[980px]">
           <div className="grid grid-cols-7 ">
             {WEEK_DAYS.map((day) => (
               <div
                 key={day}
-                className="py-3 text-center text-[22px] font-semibold text-[#3E434B]"
+                className="py-3 text-center text-[18px] font-semibold text-[#3E434B] sm:text-[20px] lg:text-[22px]"
               >
                 {day}
               </div>
@@ -362,7 +362,7 @@ function MealPlan() {
                 >
                   <div className="mb-2 flex items-center justify-between">
                     <span
-                      className={`text-[34px] font-semibold leading-none ${
+                      className={`text-[30px] font-semibold leading-none sm:text-[34px] ${
                         isOutsideCurrentMonth
                           ? "text-[#C2C7D1]"
                           : "text-[#202329]"
@@ -389,7 +389,7 @@ function MealPlan() {
                           sizes="(max-width: 768px) 220px, 180px"
                         />
                       </div>
-                      <p className="mt-3 line-clamp-2 text-[16px] font-semibold leading-[1.25] text-[#3B3F45]">
+                      <p className="mt-3 line-clamp-2 text-[15px] font-semibold leading-[1.25] text-[#3B3F45] sm:text-[16px]">
                         {meal.title}
                       </p>
                     </>
@@ -408,7 +408,7 @@ function MealPlan() {
       </div>
 
       {selectedEntry && selectedMeal ? (
-        <div className="mt-8 rounded-[12px]  p-4 md:p-6">
+        <div className="mt-8 rounded-[12px] p-3 sm:p-4 md:p-6">
           <h2 className="text-xl font-semibold leading-none text-[#141414]">
             Meal Plan
             <span className="ml-1 text-xl font-medium text-[#79808E]">
@@ -476,7 +476,7 @@ function MealPlan() {
           <div className="mt-3 flex justify-end">
             <button
               type="button"
-              className="h-10 rounded-full bg-[#0A2D9E] px-5 text-base font-semibold text-white"
+              className="h-10 rounded-full bg-[#0A2D9E] px-4 text-sm font-semibold text-white sm:px-5 sm:text-base"
             >
               + Replace Meal
             </button>
@@ -498,14 +498,14 @@ function MealCategoryHeader({
   icon: ComponentType<{ className?: string }>;
 }) {
   return (
-    <div className="mt-4 flex items-center justify-between rounded-[10px] bg-[#E9EAED] px-4 py-3">
-      <div className="flex items-center gap-2 text-xl font-semibold text-[#434851]">
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[10px] bg-[#E9EAED] px-4 py-3">
+      <div className="flex items-center gap-2 text-lg font-semibold text-[#434851] sm:text-xl">
         <Icon className="h-6 w-6" />
         <span>{title}</span>
       </div>
       <button
         type="button"
-        className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-base font-semibold text-white"
+        className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-sm font-semibold text-white sm:text-base"
       >
         <RefreshCw className="h-4 w-4" />
         Regenerate
@@ -525,14 +525,14 @@ function MealCategoryBlock({
 }) {
   return (
     <div className="mt-4 overflow-x-auto rounded-[10px] bg-[#E9EAED]">
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2 text-xl font-semibold text-[#434851]">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <div className="flex items-center gap-2 text-lg font-semibold text-[#434851] sm:text-xl">
           <Icon className="h-6 w-6" />
           <span>{title}</span>
         </div>
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-base font-semibold text-white"
+          className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-sm font-semibold text-white sm:text-base"
         >
           <RefreshCw className="h-4 w-4" />
           Regenerate
