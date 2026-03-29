@@ -2,6 +2,7 @@
 
 import { Checkbox } from "@/components/ui/Checkbox";
 import { getGroceryRecipeById } from "@/lib/grocery";
+import { jsPDF } from "jspdf";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -40,6 +41,68 @@ function GroceryListDetail({ recipeId }: GroceryListDetailProps) {
     setCheckedItems((prev) =>
       prev.length === allItemIds.length ? [] : [...allItemIds],
     );
+  };
+
+  const exportPdf = () => {
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const left = 48;
+    const right = 48;
+    const contentWidth = pageWidth - left - right;
+    let y = 56;
+
+    const ensureSpace = (neededHeight: number) => {
+      if (y + neededHeight <= pageHeight - 48) {
+        return;
+      }
+
+      doc.addPage();
+      y = 56;
+    };
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.text("Grocery List", left, y);
+    y += 28;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(13);
+    doc.text(`Recipe: ${recipe.title}`, left, y);
+    y += 24;
+
+    const completedCount = checkedItems.length;
+    const totalCount = allItemIds.length;
+    doc.setFontSize(11);
+    doc.text(`Completed: ${completedCount}/${totalCount}`, left, y);
+    y += 20;
+
+    recipe.sections.forEach((section) => {
+      ensureSpace(34);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text(`${section.title} (${section.items.length})`, left, y);
+      y += 18;
+
+      section.items.forEach((item) => {
+        const itemKey = `${section.id}-${item.id}`;
+        const isChecked = checkedItems.includes(itemKey);
+        const itemText = `[${isChecked ? "x" : " "}] ${item.name} - ${item.quantity}`;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        const lines = doc.splitTextToSize(itemText, contentWidth);
+        const blockHeight = lines.length * 14 + 2;
+        ensureSpace(blockHeight);
+        doc.text(lines, left, y);
+        y += blockHeight;
+      });
+
+      y += 8;
+    });
+
+    const safeTitle = recipe.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    doc.save(`grocery-list-${safeTitle}.pdf`);
   };
 
   return (
@@ -119,7 +182,7 @@ function GroceryListDetail({ recipeId }: GroceryListDetailProps) {
         </button>
         <button
           type="button"
-          onClick={() => window.print()}
+          onClick={exportPdf}
           className="h-[54px] rounded-full bg-[#123A9D] px-8 font-medium text-white transition-colors hover:bg-[#0E3188] [font-size:clamp(16px,1.24vw,24px)]"
         >
           Export PDF
