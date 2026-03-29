@@ -68,7 +68,7 @@ function GenderCard({
         <User className="h-11 w-11" strokeWidth={2.1} />
       </div>
       <span
-        className={`text-[38px] font-semibold [font-size:clamp(28px,2.1vw,38px)] ${selected ? "text-[#252C3C]" : "text-[#848C9A]"}`}
+        className={`text-[30px] font-semibold  ${selected ? "text-[#252C3C]" : "text-[#848C9A]"}`}
       >
         {label}
       </span>
@@ -138,10 +138,10 @@ function ProteinCalculator() {
           {step === 1 ? (
             <div className="mx-auto flex min-h-[660px] w-full max-w-[840px] flex-col">
               <div className="pt-3 text-center">
-                <h1 className="text-[58px] font-bold leading-tight text-[#121212] ">
+                <h1 className="text-[32px] font-bold leading-tight text-[#121212] ">
                   What is your gender?
                 </h1>
-                <p className="mx-auto mt-3 max-w-[440px] text-[30px] leading-[1.4] text-[#8B93A2]">
+                <p className="mx-auto mt-3 max-w-[440px] text-[24px] leading-[1.4] text-[#8B93A2]">
                   We will use this data to give you a better diet type for you
                 </p>
               </div>
@@ -168,10 +168,10 @@ function ProteinCalculator() {
           {step === 2 ? (
             <div className="mx-auto w-full max-w-[760px]">
               <div className="pt-2 text-center">
-                <h2 className="text-[58px] font-bold leading-tight text-[#121212] ">
+                <h2 className="text-[32px] font-bold leading-tight text-[#121212] ">
                   Your current weight
                 </h2>
-                <p className="mx-auto mt-3 max-w-[420px] text-[30px] leading-[1.4] text-[#8B93A2]">
+                <p className="mx-auto mt-3 max-w-[420px] text-[24px] leading-[1.4] text-[#8B93A2]">
                   We will use this data to give you a better diet type for you
                 </p>
 
@@ -179,7 +179,7 @@ function ProteinCalculator() {
                   <button
                     type="button"
                     onClick={() => setUnit("kg")}
-                    className={`h-12 min-w-[82px] rounded-full px-4 text-[30px] font-semibold transition-colors [font-size:clamp(18px,1.55vw,30px)] ${
+                    className={`h-12 min-w-[82px] rounded-full px-4 text-[24px] font-semibold transition-colors  ${
                       unit === "kg"
                         ? "bg-[#0E2F97] text-white"
                         : "text-[#8B93A2]"
@@ -190,7 +190,7 @@ function ProteinCalculator() {
                   <button
                     type="button"
                     onClick={() => setUnit("lb")}
-                    className={`h-12 min-w-[82px] rounded-full px-4 text-[30px] font-semibold transition-colors [font-size:clamp(18px,1.55vw,30px)] ${
+                    className={`h-12 min-w-[82px] rounded-full px-4 text-[24px] font-semibold transition-colors  ${
                       unit === "lb"
                         ? "bg-[#0E2F97] text-white"
                         : "text-[#8B93A2]"

@@ -30,10 +30,10 @@ function GroceryList() {
   return (
     <section className="mx-auto w-full max-w-[1180px] pb-10 pt-[104px]">
       <div className="px-4 sm:px-6">
-        <h1 className="text-[42px] font-bold leading-none text-[#131313] sm:text-[48px]">
+        <h1 className="text-[32px] font-bold leading-none text-[#131313] md:text-[35px] ">
           Grocery list
         </h1>
-        <p className="mt-4 text-[31px] font-medium leading-tight text-[#FF3A32] [font-size:clamp(18px,1.6vw,31px)]">
+        <p className="mt-4 text-xl font-medium leading-tight text-[#FF3A32] ">
           **Choose recipes to make grocery list
         </p>
 
