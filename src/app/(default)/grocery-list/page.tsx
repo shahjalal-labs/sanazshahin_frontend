@@ -1,11 +1,7 @@
-import React from 'react'
+import GroceryList from "@/components/GroceryList/GroceryList";
 
-function page() {
-  return (
-    <div className='pt-[104px] text-green-900 font-bold text-[30px] text-center'>
-        Comming Soon...
-    </div>
-  )
+function GroceryListPage() {
+  return <GroceryList />;
 }
 
-export default page
+export default GroceryListPage;

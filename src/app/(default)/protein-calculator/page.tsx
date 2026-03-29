@@ -1,11 +1,11 @@
-import React from 'react'
+import ProteinCalculator from "@/components/ProteinCalculator/ProteinCalculator";
 
 function page() {
   return (
-    <div className='pt-[104px] text-green-900 font-bold text-[30px] text-center'>
-        Comming Soon...
+    <div>
+      <ProteinCalculator />
     </div>
-  )
+  );
 }
 
-export default page
+export default page;
