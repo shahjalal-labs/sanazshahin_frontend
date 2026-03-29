@@ -2,6 +2,7 @@
 
 import { useMobileNav } from "@/shared/MobileNavContext";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 // Icon components (inline SVGs to avoid external dependencies)
@@ -110,6 +111,12 @@ export default function Header() {
     return () => window.removeEventListener("resize", handleResize);
   }, [closeMobileNav, isMobileNavOpen]);
 
+  const router = useRouter();
+
+  const handleNotification = () => {
+    router.push("/notification");
+  }
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm py-4">
       <div className="container mx-auto px-4">
@@ -157,6 +164,7 @@ export default function Header() {
             <button
               className="relative p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
               aria-label="Notifications"
+              onClick={handleNotification}
             >
               <BellIcon />
               {/* Notification dot */}
