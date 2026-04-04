@@ -1,15 +1,9 @@
 "use client";
 
-import {
-  ArrowLeft,
-  Check,
-  ChevronRight,
-  ShieldCheck,
-  User,
-} from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, User } from "lucide-react";
 import { useMemo, useState } from "react";
 
-type Step = 1 | 2 | 3 | 4;
+type Step = 1 | 2 | 4;
 type Gender = "male" | "female";
 type Unit = "kg" | "lb";
 
@@ -113,7 +107,7 @@ function ProteinCalculator() {
         ];
 
   const nextStep = () => {
-    setStep((prev) => (prev < 4 ? ((prev + 1) as Step) : prev));
+    setStep((prev) => (prev === 1 ? 2 : 4));
   };
 
   const previousStep = () => {
@@ -205,7 +199,7 @@ function ProteinCalculator() {
                 <div className="mb-4 h-0 w-0 border-l-[10px] border-r-[10px] border-t-[16px] border-l-transparent border-r-transparent border-t-[#0E2F97]" />
 
                 <div className="grid h-[128px] w-[128px] place-items-center rounded-[24px] bg-[#D6DEF4]">
-                  <span className="text-[70px] font-semibold leading-none text-[#3E425D] [font-size:clamp(40px,3.6vw,70px)]">
+                  <span className="font-semibold leading-none text-[#3E425D] [font-size:clamp(40px,3.6vw,70px)]">
                     {displayWeight}
                   </span>
                 </div>
@@ -242,7 +236,7 @@ function ProteinCalculator() {
                       return (
                         <span
                           key={value}
-                          className={`absolute top-[138px] -translate-x-1/2 text-[20px] font-semibold text-[#21313C] [font-size:clamp(12px,1vw,20px)] ${positions[index]}`}
+                          className={`absolute top-[138px] -translate-x-1/2 font-semibold text-[#21313C] [font-size:clamp(12px,1vw,20px)] ${positions[index]}`}
                         >
                           {value}
                         </span>
@@ -307,31 +301,6 @@ function ProteinCalculator() {
                   onClick={nextStep}
                   label="Continue to summary"
                 />
-              </div>
-            </div>
-          ) : null}
-
-          {step === 3 ? (
-            <div className="mx-auto flex min-h-[507px] w-full max-w-[780px] flex-col items-center text-center ">
-              <div className="mt-8 grid h-[236px] w-[236px] place-items-center rounded-full bg-[#9AB3FA]">
-                <div className="grid h-[192px] w-[192px] place-items-center rounded-full bg-[#7490E4]">
-                  <div className="grid h-[152px] w-[152px] place-items-center rounded-full bg-[#0E2F97] text-white">
-                    <ShieldCheck className="h-16 w-16" strokeWidth={2.1} />
-                  </div>
-                </div>
-              </div>
-
-              <h2 className="mt-11 text-2xl font-bold leading-none text-[#101010] ">
-                Thanks!
-              </h2>
-
-              <p className="mt-5 max-w-[320px] text-base leading-[1.3] text-[#6D7687] ">
-                We&apos;re analyzing your results and creating your personalized
-                recommendations.
-              </p>
-
-              <div className="mt-auto pb-3 pt-16">
-                <ProgressButton onClick={nextStep} label="Continue to result" />
               </div>
             </div>
           ) : null}
