@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
+import Swal from "sweetalert2";
 
 export default function Profile() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -10,6 +12,50 @@ export default function Profile() {
   const [bio, setBio] = useState("");
   const [currentPassword, setCurrentPassword] = useState("·······");
   const [newPassword, setNewPassword] = useState("·······");
+
+  const openDeleteConfirm = () => {
+    Swal.fire({
+      icon: "question",
+      iconColor: "#0B2E9C",
+      title: "Are You Sure?",
+      text: "Do you want to Delete Account?",
+      showCancelButton: true,
+      confirmButtonText: "Yes,Delete",
+      cancelButtonText: "Cancel",
+      buttonsStyling: false,
+      customClass: {
+        popup: "sanaz-swal-popup",
+        title: "sanaz-swal-title",
+        htmlContainer: "sanaz-swal-html",
+        actions: "sanaz-swal-actions",
+        confirmButton: "sanaz-swal-confirm",
+        cancelButton: "sanaz-swal-cancel",
+        icon: "sanaz-swal-icon",
+      },
+    });
+  };
+
+  const openLogoutConfirm = () => {
+    Swal.fire({
+      icon: "question",
+      iconColor: "#0B2E9C",
+      title: "Are You Sure?",
+      text: "Do you want to log out ?",
+      showCancelButton: true,
+      confirmButtonText: "Log Out",
+      cancelButtonText: "Cancel",
+      buttonsStyling: false,
+      customClass: {
+        popup: "sanaz-swal-popup",
+        title: "sanaz-swal-title",
+        htmlContainer: "sanaz-swal-html",
+        actions: "sanaz-swal-actions",
+        confirmButton: "sanaz-swal-confirm",
+        cancelButton: "sanaz-swal-cancel",
+        icon: "sanaz-swal-icon",
+      },
+    });
+  };
 
   return (
     <div className=" p-4 sm:p-6 lg:p-8">
@@ -168,7 +214,7 @@ export default function Profile() {
                   <p className="text-sm text-gray-500 truncate">
                     robertrossi@gmail.com
                   </p>
-                  <span className="inline-block mt-1.5 px-3 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
+                  <span className="inline-block mt-1.5 px-3 py-0.5 bg-[#FFED72] shadow-md text-[#F1CB08] text-base font-semibold rounded-full">
                     Premium Member
                   </span>
                 </div>
@@ -232,18 +278,38 @@ export default function Profile() {
               </h3>
 
               <div className="flex flex-col">
-                <SupportLink icon={<BookmarkIcon />} label="Save List" />
-                <SupportLink icon={<ShieldIcon />} label="Privacy Policy" />
-                <SupportLink icon={<BellIcon />} label="Notifications" />
+                <SupportLink
+                  icon={<BookmarkIcon />}
+                  label="Save List"
+                  path="/save-list"
+                />
+                <SupportLink
+                  icon={<ShieldIcon />}
+                  label="Privacy Policy"
+                  path="/privacy-policy"
+                />
+                <SupportLink
+                  icon={<BellIcon />}
+                  label="Notifications"
+                  path="/notifications"
+                />
 
-                <button className="flex items-center gap-3 py-3.5 border-t border-gray-100 text-red-500 hover:text-red-600 transition-colors group">
+                <button
+                  type="button"
+                  onClick={openDeleteConfirm}
+                  className="flex items-center gap-3 py-3.5 border-t border-gray-100 text-red-500 hover:text-red-600 transition-colors group"
+                >
                   <TrashIcon />
                   <span className="text-sm font-medium flex-1 text-left">
                     Delete Account
                   </span>
                 </button>
 
-                <button className="flex items-center gap-3 py-3.5 border-t border-gray-100 text-red-500 hover:text-red-600 transition-colors group">
+                <button
+                  type="button"
+                  onClick={openLogoutConfirm}
+                  className="flex items-center gap-3 py-3.5 border-t border-gray-100 text-red-500 hover:text-red-600 transition-colors group"
+                >
                   <LogoutIcon />
                   <span className="text-sm font-medium flex-1 text-left">
                     Logout
@@ -263,18 +329,23 @@ export default function Profile() {
 function SupportLink({
   icon,
   label,
+  path,
 }: {
   icon: React.ReactNode;
   label: string;
+  path: string;
 }) {
   return (
-    <button className="flex items-center gap-3 py-3.5 border-b border-gray-100 hover:bg-gray-50 rounded-lg px-1 transition-colors group">
+    <Link
+      href={path}
+      className="flex items-center gap-3 py-3.5 border-b border-gray-100 hover:bg-gray-50 rounded-lg px-1 transition-colors group"
+    >
       <span className="text-gray-500">{icon}</span>
       <span className="text-sm text-gray-700 font-medium flex-1 text-left">
         {label}
       </span>
       <ChevronRightIcon />
-    </button>
+    </Link>
   );
 }
 
