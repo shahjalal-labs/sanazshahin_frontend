@@ -101,7 +101,7 @@ export default function Profile() {
                 </div>
 
                 {/* Professional Bio */}
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Professional Bio
                   </label>
@@ -112,7 +112,7 @@ export default function Profile() {
                     rows={4}
                     className="w-full px-4 py-3 rounded-2xl border border-gray-200 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
                   />
-                </div>
+                </div> */}
 
                 {/* Save Button */}
                 <div className="flex justify-end">
@@ -214,9 +214,17 @@ export default function Profile() {
                   <p className="text-sm text-gray-500 truncate">
                     robertrossi@gmail.com
                   </p>
-                  <span className="inline-block mt-1.5 px-3 py-0.5 bg-[#FFED72] shadow-md text-[#F1CB08] text-base font-semibold rounded-full">
+                  {/* <span
+                    className="mt-2 inline-flex items-center rounded-full px-6 py-1.5 text-[18px] font-semibold text-[#7A5B00]"
+                    style={{
+                      background:
+                        "linear-gradient(180deg, #FFED72 0%, #F1CB08 50%)",
+                      boxShadow:
+                        "inset 0 2px 4px rgba(0,0,0,0.25), inset 0 -2px 4px rgba(0,0,0,0.25)",
+                    }}
+                  >
                     Premium Member
-                  </span>
+                  </span> */}
                 </div>
               </div>
             </div>
