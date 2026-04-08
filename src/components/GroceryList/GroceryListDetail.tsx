@@ -124,7 +124,7 @@ function GroceryListDetail({ recipeId }: GroceryListDetailProps) {
 
       <div className="mb-6 rounded-[18px] border border-[#CDEFD9] bg-[#D8F3E1] px-4 py-5 text-center sm:mb-8">
         <h2 className="font-bold text-[#1D1D1D] [font-size:clamp(24px,1.9vw,34px)]">
-          Grocery List ✨
+          Grocery List
         </h2>
         <p className="mt-1 text-[#4B5A5E] [font-size:clamp(14px,1.1vw,20px)]">
           Auto-generated from your meal plan
