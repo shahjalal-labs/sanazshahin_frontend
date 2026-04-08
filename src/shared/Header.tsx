@@ -115,7 +115,7 @@ export default function Header() {
 
   const handleNotification = () => {
     router.push("/notification");
-  }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm py-4">
@@ -125,7 +125,7 @@ export default function Header() {
           <Link href={"/"}>
             <div className="flex-shrink-0">
               <span className="text-primary font-extrabold text-lg tracking-wide uppercase select-none">
-                MY HEADER
+                Tomatoes With Lemon Club
               </span>
             </div>
           </Link>
