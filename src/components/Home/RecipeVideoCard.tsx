@@ -61,16 +61,18 @@ export default function RecipeVideoCard({
         <button
           type="button"
           onClick={() => setIsPlaying(true)}
-          className="group relative block w-full text-left"
+          className="group relative block w-full overflow-hidden rounded-[30px] text-left"
           aria-label="Play recipe video"
         >
-          <Image
-            src={thumbnail}
-            alt={`${title} video thumbnail`}
-            width={560}
-            height={900}
-            className="h-auto w-full object-cover"
-          />
+          <div className="relative w-full pt-[125%]">
+            <Image
+              src={thumbnail}
+              alt={`${title} video thumbnail`}
+              fill
+              sizes="(max-width: 1024px) 100vw, 42vw"
+              className="object-cover"
+            />
+          </div>
           <div className="absolute inset-0 bg-black/20 transition-colors group-hover:bg-black/30" />
           <span className="absolute left-1/2 top-1/2 inline-flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-red-600 text-white shadow-xl">
             <Play className="ml-1 h-10 w-10 fill-white" />

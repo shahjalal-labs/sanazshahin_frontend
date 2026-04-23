@@ -55,6 +55,17 @@ const WEEK_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MEAL_TABLE_GRID_CLASS =
   "grid min-w-[920px] grid-cols-[260px_repeat(6,minmax(74px,1fr))_130px] items-center gap-x-2";
 
+const NUTRITION_COLUMN_HEADERS = [
+  "Name",
+  "Fiber",
+  "Fat",
+  "Carb",
+  "Iron",
+  "Protein",
+  "Calorie",
+  "Duration",
+];
+
 const mealCatalog: Record<MealKey, MealCatalogItem> = {
   "kale-salad": {
     title: "Kale Caesar Salad",
@@ -233,6 +244,14 @@ const formatDisplayDate = (isoDate: string) => {
   });
 };
 
+const truncateMealName = (name: string, maxChars = 10) => {
+  if (name.length <= maxChars) {
+    return name;
+  }
+
+  return `${name.slice(0, maxChars)}...`;
+};
+
 function MealPlan() {
   const [currentMonth, setCurrentMonth] = useState(new Date(2026, 0, 1));
   const [selectedDate, setSelectedDate] = useState("2026-01-04");
@@ -299,6 +318,16 @@ function MealPlan() {
   const selectedMeal = selectedEntry
     ? mealCatalog[selectedEntry.mealKey]
     : null;
+  const selectedNutritionStats = selectedMeal
+    ? [
+        { label: "Fiber", value: selectedMeal.nutrition.fiber },
+        { label: "Fat", value: selectedMeal.nutrition.fat },
+        { label: "Carb", value: selectedMeal.nutrition.carb },
+        { label: "Iron", value: selectedMeal.nutrition.iron },
+        { label: "Protein", value: selectedMeal.nutrition.protein },
+        { label: "Calorie", value: selectedMeal.nutrition.calorie },
+      ]
+    : [];
 
   return (
     <section className="mx-auto container w-full px-3 pb-12 sm:px-4">
@@ -408,7 +437,7 @@ function MealPlan() {
       </div>
 
       {selectedEntry && selectedMeal ? (
-        <div className="mt-8 rounded-[12px] p-3 sm:p-4 md:p-6">
+        <div className="mt-12 rounded-[12px]">
           <h2 className="text-xl font-semibold leading-none text-[#141414]">
             Meal Plan
             <span className="ml-1 text-xl font-medium text-[#79808E]">
@@ -416,27 +445,10 @@ function MealPlan() {
             </span>
           </h2>
 
-          <div className="mt-5 overflow-x-auto rounded-[10px] border border-[#E7E8EC] bg-white shadow-sm">
-            <div
-              className={`${MEAL_TABLE_GRID_CLASS} px-4 py-3 text-xl font-semibold text-[#79808E]`}
-            >
-              <p>Name</p>
-              <p>Fiber</p>
-              <p>Fat</p>
-              <p>Carb</p>
-              <p>Iron</p>
-              <p>Protein</p>
-              <p>Calorie</p>
-              <p>Duration</p>
-            </div>
-          </div>
-
-          <div className="mt-4 overflow-x-auto rounded-[10px] bg-[#E9EAED] px-4 py-4">
-            <div
-              className={`${MEAL_TABLE_GRID_CLASS} text-xl font-semibold text-[#4D525D]`}
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="relative h-9 w-9 overflow-hidden rounded-[6px] border border-[#B3BEDA]">
+          <div className="mt-5 rounded-2xl border border-[#E7E8EC] bg-white p-4 shadow-sm sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-[#D7DCE5] bg-[#F2F4F8]">
                   <Image
                     src={selectedMeal.image}
                     alt={selectedMeal.title}
@@ -444,20 +456,37 @@ function MealPlan() {
                     className="object-cover"
                   />
                 </div>
-                <p className="truncate whitespace-nowrap">
-                  {selectedMeal.title}
-                </p>
+                <div className="min-w-0">
+                  <p className="truncate text-lg font-semibold text-[#202329] sm:text-xl">
+                    {selectedMeal.title}
+                  </p>
+                  <p className="text-sm font-medium text-[#79808E] sm:text-base">
+                    Day {selectedEntry.dayNumber.toString().padStart(2, "0")}{" "}
+                    meal
+                  </p>
+                </div>
               </div>
-              <p>{selectedMeal.nutrition.fiber}</p>
-              <p>{selectedMeal.nutrition.fat}</p>
-              <p>{selectedMeal.nutrition.carb}</p>
-              <p>{selectedMeal.nutrition.iron}</p>
-              <p>{selectedMeal.nutrition.protein}</p>
-              <p>{selectedMeal.nutrition.calorie}</p>
-              <div className="flex items-center gap-2">
+
+              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[#D7DCE5] bg-[#F8FAFC] px-3 py-1.5 text-sm font-semibold text-[#4D525D]">
+                <CalendarDays className="h-4 w-4" />
                 <span>{selectedMeal.nutrition.duration}</span>
-                <CalendarDays className="h-5 w-5 text-[#545B67]" />
               </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              {selectedNutritionStats.map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-xl border border-[#E5E9F0] bg-[#F8FAFC] px-3 py-3"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#8A92A2]">
+                    {item.label}
+                  </p>
+                  <p className="mt-1 text-lg font-bold leading-none text-[#1F2430] sm:text-xl">
+                    {item.value}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -498,18 +527,22 @@ function MealCategoryHeader({
   icon: ComponentType<{ className?: string }>;
 }) {
   return (
-    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[10px] bg-[#E9EAED] px-4 py-3">
-      <div className="flex items-center gap-2 text-lg font-semibold text-[#434851] sm:text-xl">
-        <Icon className="h-6 w-6" />
-        <span>{title}</span>
+    <div className="mt-4 overflow-x-auto rounded-[10px] bg-[#E9EAED]">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <div className="flex items-center gap-2 text-lg font-semibold text-[#434851] sm:text-xl">
+          <Icon className="h-6 w-6" />
+          <span>{title}</span>
+        </div>
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-sm font-semibold text-white sm:text-base"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Regenerate
+        </button>
       </div>
-      <button
-        type="button"
-        className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-sm font-semibold text-white sm:text-base"
-      >
-        <RefreshCw className="h-4 w-4" />
-        Regenerate
-      </button>
+
+      <MealTableColumnHeader />
     </div>
   );
 }
@@ -538,8 +571,27 @@ function MealCategoryBlock({
           Regenerate
         </button>
       </div>
+
+      <MealTableColumnHeader />
+
       <div className="min-w-[920px] border-t border-[#D6DAE0] bg-[#F2F3F5]">
         {children}
+      </div>
+    </div>
+  );
+}
+
+function MealTableColumnHeader() {
+  return (
+    <div className="min-w-[920px] border-t border-[#D6DAE0] bg-[#E1E4EA] px-4 py-2.5">
+      <div
+        className={`${MEAL_TABLE_GRID_CLASS} text-base font-semibold text-[#677081] sm:text-lg`}
+      >
+        {NUTRITION_COLUMN_HEADERS.map((label, index) => (
+          <p key={label} className={index === 0 ? "text-left" : "text-center"}>
+            {label}
+          </p>
+        ))}
       </div>
     </div>
   );
@@ -560,7 +612,7 @@ function MealListRow({
     <button
       type="button"
       onClick={onSelect}
-      className={`${MEAL_TABLE_GRID_CLASS} w-full border-b border-[#D8DCE3] px-4 py-3 text-xl font-semibold text-[#4D525D] ${
+      className={`${MEAL_TABLE_GRID_CLASS} w-full border-b border-[#D8DCE3] px-4 py-3 text-base font-semibold text-[#4D525D] sm:text-lg ${
         highlighted
           ? "relative z-[1] bg-[#E6E8EC] ring-2 ring-inset ring-[#0A2D9E]"
           : "hover:bg-[#ECEEF2]"
@@ -581,15 +633,17 @@ function MealListRow({
             className="object-cover"
           />
         </div>
-        <p className="truncate whitespace-nowrap">{meal.title}</p>
+        <p className="truncate whitespace-nowrap text-left" title={meal.title}>
+          {truncateMealName(meal.title)}
+        </p>
       </div>
-      <p>{meal.nutrition.fiber}</p>
-      <p>{meal.nutrition.fat}</p>
-      <p>{meal.nutrition.carb}</p>
-      <p>{meal.nutrition.iron}</p>
-      <p>{meal.nutrition.protein}</p>
-      <p>{meal.nutrition.calorie}</p>
-      <div className="flex items-center gap-2">
+      <p className="text-center tabular-nums">{meal.nutrition.fiber}</p>
+      <p className="text-center tabular-nums">{meal.nutrition.fat}</p>
+      <p className="text-center tabular-nums">{meal.nutrition.carb}</p>
+      <p className="text-center tabular-nums">{meal.nutrition.iron}</p>
+      <p className="text-center tabular-nums">{meal.nutrition.protein}</p>
+      <p className="text-center tabular-nums">{meal.nutrition.calorie}</p>
+      <div className="flex items-center justify-center gap-2">
         <span>{meal.nutrition.duration}</span>
         <CalendarDays className="h-5 w-5 text-[#545B67]" />
       </div>
