@@ -3,10 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useResetPasswordMutation } from "@/redux/api/userApi";
+import Cookies from "js-cookie";
 import { CheckCheck, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function ResetPassword() {
@@ -17,8 +19,20 @@ export default function ResetPassword() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [forgetToken, setForgetToken] = useState<string | null>(null);
+  const [resetPasswordFn, { isLoading }] = useResetPasswordMutation();
 
   const router = useRouter();
+
+  useEffect(() => {
+    const token = Cookies.get("forgetToken");
+    if (!token) {
+      toast.error("Session expired. Please request a password reset again.");
+      router.push("/forgot-password");
+      return;
+    }
+    setForgetToken(token);
+  }, [router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -35,22 +49,28 @@ export default function ResetPassword() {
       return;
     }
 
-    // try {
-    //   const response = await resetPasswordFn({
-    //     newPassword: formData.newPassword,
-    //     forgetToken: forgetToken,
-    //   }).unwrap();
+    if (!forgetToken) {
+      toast.error("Session expired. Please request a password reset again.");
+      router.push("/forgot-password");
+      return;
+    }
 
-    //   if (response?.success) {
-    //     toast.success("Password has been reset successfully.");
-    //     router.push("/login");
-    //   } else {
-    //     toast.error("Failed to reset password. Please try again.");
-    //   }
-    // } catch {
-    //   toast.error("An error occurred while resetting your password.");
+    try {
+      const response = await resetPasswordFn({
+        newPassword: formData.newPassword,
+        forgetToken: forgetToken,
+      }).unwrap();
 
-    // }
+      if (response?.success) {
+        toast.success("Password has been reset successfully.");
+        Cookies.remove("forgetToken");
+        router.push("/login");
+      } else {
+        toast.error("Failed to reset password. Please try again.");
+      }
+    } catch {
+      toast.error("An error occurred while resetting your password.");
+    }
 
     setShowSuccessModal(true);
   };

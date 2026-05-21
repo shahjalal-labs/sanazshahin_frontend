@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -17,14 +15,14 @@ import { z } from "zod";
 // Define the validation schema
 const signUpSchema = z
   .object({
-    firstName: z.string().nonempty("First name is required"),
-    lastName: z.string().nonempty("Last name is required"),
+    fullName: z.string().nonempty("Full name is required"),
+
     email: z.string().email("Please enter a valid email address"),
-    phone: z
-      .string()
-      .min(10, "Phone number must be at least 10 digits")
-      .max(15, "Phone number must be less than 15 digits")
-      .regex(/^[0-9+\-\s()]+$/, "Please enter a valid phone number"),
+    // phone: z
+    //   .string()
+    //   .min(10, "Phone number must be at least 10 digits")
+    //   .max(15, "Phone number must be less than 15 digits")
+    //   .regex(/^[0-9+\-\s()]+$/, "Please enter a valid phone number"),
     password: z.string().min(8, "Password must be at least 8 characters"),
 
     confirmPassword: z.string(),
@@ -38,10 +36,10 @@ type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState<SignUpFormData>({
-    firstName: "",
-    lastName: "",
+    fullName: "",
+
     email: "",
-    phone: "",
+    // phone: "",
     password: "",
     confirmPassword: "",
   });
@@ -96,15 +94,12 @@ export default function SignUpPage() {
     try {
       // Prepare body data with required fields
       const bodyData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+        fullName: formData.fullName,
         email: formData.email,
-        phone: formData.phone,
+        // phone: formData.phone,
         password: formData.password,
       };
-
-      console.log("Sign up data:", bodyData);
-
+      console.log("Submitting registration with data:", bodyData);
       // Call the registration API
       const response = await userRegistrationFn(bodyData).unwrap();
 
@@ -168,20 +163,20 @@ export default function SignUpPage() {
                 Full Name
               </Label>
               <Input
-                id="firstName"
-                name="firstName"
+                id="fullName"
+                name="fullName"
                 type="text"
                 placeholder="Full name"
-                value={formData.firstName}
+                value={formData.fullName}
                 onChange={handleInputChange}
                 className={`w-full px-4 py-6 border rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary ${
-                  errors.firstName ? "border-red-500" : "border-gray-300"
+                  errors.fullName ? "border-red-500" : "border-gray-300"
                 }`}
                 required
                 disabled={isLoading}
               />
-              {errors.firstName && (
-                <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
+              {errors.fullName && (
+                <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
               )}
             </div>
           </div>
@@ -213,7 +208,7 @@ export default function SignUpPage() {
           </div>
 
           {/* Phone */}
-          <div>
+          {/* <div>
             <Label
               htmlFor="phone"
               className="block text-sm font-medium text-gray-700 mb-2"
@@ -236,7 +231,7 @@ export default function SignUpPage() {
             {errors.phone && (
               <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
             )}
-          </div>
+          </div> */}
 
           {/* Password */}
           <div>

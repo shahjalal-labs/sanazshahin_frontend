@@ -1,20 +1,24 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useUserLoginMutation } from "@/redux/api/registerApi";
+import {
+  useGoogleLoginMutation,
+  useUserLoginMutation,
+} from "@/redux/api/registerApi";
 import Cookies from "js-cookie";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function LoginPage() {
+  const { data: session } = useSession();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -31,6 +35,7 @@ export default function LoginPage() {
 
   const router = useRouter();
   const [userLoginFn] = useUserLoginMutation();
+  const [googleLoginFn] = useGoogleLoginMutation();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -69,8 +74,6 @@ export default function LoginPage() {
         email: formData.email,
         password: formData.password,
       };
-
-      console.log("Login data:", loginData);
 
       const response = await userLoginFn(loginData).unwrap();
 
@@ -125,19 +128,84 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    setGoogleLoading(true);
-    localStorage.setItem("googleSignIn", "true");
-
+  const handleGoogleLogin = async () => {
     try {
-      // Keep this as a URL redirect so the page compiles without next-auth dependency.
-      window.location.href = "/api/auth/signin/google";
-    } catch (err: unknown) {
-      console.error("Google login error:", err);
-      toast.error("Google login failed. Please try again.");
+      setGoogleLoading(true);
+      await signIn("google");
+    } catch (err) {
+      console.error(err);
+      toast.error("Google login failed");
       setGoogleLoading(false);
     }
   };
+
+  // SEND TO BACKEND VIA RTK
+  // -------------------------
+  useEffect(() => {
+    const sendGoogleData = async () => {
+      if (!session?.user) return;
+
+      try {
+        const payload = {
+          email: session.user.email,
+          fullName: session.user.name,
+          profileImage: session.user.image || "",
+          fcmToken: "asdf",
+        };
+
+        const res = await googleLoginFn(payload).unwrap();
+
+        console.log("Google login response:", res);
+
+        if (res?.result?.accessToken) {
+          Cookies.set("accessToken", res.result.accessToken);
+        }
+
+        toast.success("Google login successful");
+        router.push("/");
+      } catch (error: any) {
+        console.error(error);
+        toast.error("Backend Google login failed");
+      } finally {
+        setGoogleLoading(false);
+      }
+    };
+
+    sendGoogleData();
+  }, [session, googleLoginFn, router]);
+
+  useEffect(() => {
+    const sendGoogleData = async () => {
+      if (!session?.user) return;
+
+      try {
+        const payload = {
+          email: session.user.email,
+          fullName: session.user.name,
+          profileImage: session.user.image || "",
+          fcmToken: "asdf",
+        };
+
+        const res = await googleLoginFn(payload).unwrap();
+
+        console.log("Google login response:", res);
+
+        if (res?.result?.accessToken) {
+          Cookies.set("accessToken", res.result.accessToken);
+        }
+
+        toast.success("Google login successful");
+        router.push("/");
+      } catch (error: any) {
+        console.error(error);
+        toast.error("Backend Google login failed");
+      } finally {
+        setGoogleLoading(false);
+      }
+    };
+
+    sendGoogleData();
+  }, [session, googleLoginFn, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center  py-12 px-4 sm:px-6 lg:px-8">

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -80,18 +78,27 @@ export default function SignupVerifyOtp() {
 
       const response = await userVerifyOtp(verifyData).unwrap();
 
-      if (response.success) {
-        console.log("OTP verification successful:", response);
+      console.log("OTP verification response:", response);
 
-        Cookies.set("accessToken", response?.result?.accessToken);
+      if (response.success || response.result?.accessToken) {
+        // Set the token with proper key name
+        const token = response?.result?.accessToken || response?.accessToken;
+        if (token) {
+          Cookies.set("token", token);
+        }
+
         toast.success("OTP verified successfully!");
-        console.log("response user", response);
-        router.push("/profile-setup");
+
+        // Add a small delay before navigation to ensure state updates
+        setTimeout(() => {
+          router.push("/login");
+          // router.push("/profile-setup");
+        }, 500);
       } else {
         setError(response.message || "OTP verification failed");
       }
     } catch (error: any) {
-      console.error("OTP verification error:", error);
+      toast.error("OTP verification error:", error);
 
       if (error.data?.message) {
         setError(error.data.message);

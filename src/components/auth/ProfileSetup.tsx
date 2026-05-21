@@ -33,15 +33,14 @@ export default function ProfileSetupPage() {
     e.preventDefault();
 
     try {
-      // ✅ correct way to append FormData
       const formData = new FormData();
-      formData.append("proffesion", selectedProfession);
+      formData.append("profession", selectedProfession);
 
       // call API
       const response = await updateProfileSetupFn(formData).unwrap();
 
       if (response?.success) {
-        toast.success("Proile setup successfully");
+        toast.success("Profile setup successfully");
         router.push("/");
       }
 
@@ -49,7 +48,7 @@ export default function ProfileSetupPage() {
       console.log("Profile updated successfully!");
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error("Profile setup faild")
+      toast.error("Profile setup failed");
     }
   };
 

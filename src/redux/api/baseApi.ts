@@ -8,11 +8,10 @@ export const baseApi = createApi({
     // baseUrl: "https://api.reviewlift.net/api/v1",
     // base api
     prepareHeaders: (headers) => {
-      const token = Cookies.get("token");
+      const token = Cookies.get("token") || Cookies.get("accessToken");
 
       if (token) {
-        headers.set("Authorization", `${token}`);
-        console.log("Token is set:", token);
+        headers.set("Authorization", `Bearer ${token}`);
       } else {
       }
       // hello

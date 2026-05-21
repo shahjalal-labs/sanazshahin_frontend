@@ -2,8 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useResetPasswordSentOtpMutation } from "@/redux/api/userApi";
-import { Loader2 } from "lucide-react";
+import { useForgotPasswordMutation } from "@/redux/api/userApi";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
@@ -13,23 +12,23 @@ import { toast } from "sonner";
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
 
-  // const [resetPasswordFn, { isLoading }] = useResetPasswordSentOtpMutation();
+  const [forgotPasswordFn, { isLoading }] = useForgotPasswordMutation();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // try {
-    //   const response = await resetPasswordFn({email: email}).unwrap();
+    try {
+      const response = await forgotPasswordFn({ email: email }).unwrap();
 
-    //   if (response?.success) {
-    //     toast.success("A verification code has been sent to your email.");
-    //     router.push(`/verify-otp?email=${email}`);
-    //   } else {
-    //     toast.error("Something went wrong. Please try again.");
-    //   }
-    // } catch  {
-    //   toast.error("Failed to send verification code. Please check your email.");
-    // }
+      if (response?.success) {
+        toast.success("A verification code has been sent to your email.");
+        router.push(`/verify-otp?email=${email}`);
+      } else {
+        toast.error("Something went wrong. Please try again.");
+      }
+    } catch {
+      toast.error("Failed to send verification code. Please check your email.");
+    }
 
     router.push(`/verify-otp?email=${email}`);
   };
@@ -86,7 +85,6 @@ export default function ForgotPassword() {
             ) : (
               "Send Code"
             )} */}
-
             Send Code
           </Button>
 

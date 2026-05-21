@@ -1,8 +1,12 @@
 "use client";
 
+import { useGetMyProfileQuery } from "@/redux/api/userApi";
 import { useMobileNav } from "@/shared/MobileNavContext";
+import Cookies from "js-cookie";
+import { signOut } from "next-auth/react";
+import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 // Icon components (inline SVGs to avoid external dependencies)
@@ -82,6 +86,11 @@ export default function Header() {
   const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useMobileNav();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const { data: userData } = useGetMyProfileQuery({});
+  const profile = userData?.result;
+  const token = Cookies.get("accessToken") ?? Cookies.get("token");
+  const hasProfileImage = Boolean(profile?.profileImage);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -112,9 +121,37 @@ export default function Header() {
   }, [closeMobileNav, isMobileNavOpen]);
 
   const router = useRouter();
+  const pathname = usePathname();
+
+  const PUBLIC_PATHS = [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/verify-otp",
+  ];
+
+  // Redirect to login if no token and not on a public auth page
+  useEffect(() => {
+    const hasToken = Boolean(
+      Cookies.get("accessToken") ?? Cookies.get("token"),
+    );
+    if (!hasToken && pathname && !PUBLIC_PATHS.includes(pathname)) {
+      router.replace("/login");
+    }
+  }, [pathname, router]);
 
   const handleNotification = () => {
     router.push("/notification");
+  };
+
+  const handleLogout = async () => {
+    Cookies.remove("accessToken");
+    Cookies.remove("token");
+    Cookies.remove("forgetToken");
+    await signOut();
+    setDropdownOpen(false);
+    router.push("/login");
   };
 
   return (
@@ -171,38 +208,68 @@ export default function Header() {
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
             </button>
 
-            {/* User icon with dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button
-                className="p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
+                className="p-1 rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
                 onClick={() => setDropdownOpen((v) => !v)}
                 aria-label="User menu"
                 aria-expanded={dropdownOpen}
               >
-                <UserIcon />
+                {token && hasProfileImage ? (
+                  <Image
+                    src={profile?.profileImage}
+                    alt={profile?.fullName}
+                    width={36}
+                    height={36}
+                    className="w-9 h-9 rounded-full object-cover border border-gray-200"
+                  />
+                ) : (
+                  <UserIcon />
+                )}
               </button>
 
               {/* Dropdown */}
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50 animate-fade-in">
-                  <Link href="/login">
-                    {" "}
-                    <button
-                      className="w-full px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left font-medium"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      Log in
-                    </button>
-                  </Link>
-                  <div className="h-px bg-gray-100 mx-3" />
-                  <Link href="/signup">
-                    <button
-                      className="w-full px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left font-medium"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      Sign Up
-                    </button>
-                  </Link>
+                <div className="absolute right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50 animate-fade-in">
+                  {token ? (
+                    <>
+                      <div className="px-4 py-3 w-64">
+                        <p className="text-sm font-semibold text-gray-800 truncate">
+                          {profile?.fullName}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate mt-1">
+                          {profile?.email}
+                        </p>
+                      </div>
+                      <div className="h-px bg-gray-100" />
+                      <button
+                        className="w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors text-left font-medium"
+                        onClick={handleLogout}
+                      >
+                        Logout
+                      </button>
+                    </>
+                  ) : (
+                    <div className="px-2 py-2 w-40">
+                      <Link href="/login">
+                        <button
+                          className="w-full px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left font-medium"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          Log in
+                        </button>
+                      </Link>
+                      <div className="h-px bg-gray-100 mx-3" />
+                      <Link href="/signup">
+                        <button
+                          className="w-full px-5 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left font-medium"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          Sign Up
+                        </button>
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

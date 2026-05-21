@@ -1,17 +1,59 @@
 "use client";
 
+import { useUpdateProfileMutation } from "@/redux/api/registerApi";
+import {
+  useChangePasswordMutation,
+  useDeleteAccountMutation,
+  useGetMyProfileQuery,
+} from "@/redux/api/userApi";
+import Cookies from "js-cookie";
+import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import Swal from "sweetalert2";
 
 export default function Profile() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("info@example.com");
-  const [bio, setBio] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("·······");
-  const [newPassword, setNewPassword] = useState("·······");
+
+  const [changePasswordFn] = useChangePasswordMutation();
+  const [deleteAccountFn] = useDeleteAccountMutation();
+
+  const [updateProfileFn, { isLoading }] = useUpdateProfileMutation();
+  const [updateDataForm, setUpdateDataForm] = useState({
+    fullName: "",
+    email: "",
+  });
+
+  const [changePasswordForm, setChangePasswordForm] = useState({
+    oldPassword: "",
+    newPassword: "",
+  });
+
+  const hasAuthToken = Boolean(
+    Cookies.get("accessToken") || Cookies.get("token"),
+  );
+
+  const router = useRouter();
+
+  const { data: profileData } = useGetMyProfileQuery(undefined, {
+    skip: !hasAuthToken,
+  });
+  const profile = profileData?.result;
+
+  useEffect(() => {
+    if (!profile) return;
+    setUpdateDataForm((prev) => ({
+      ...prev,
+      fullName: prev.fullName || profile.fullName || "",
+      email:
+        prev.email && prev.email !== "info@example.com"
+          ? prev.email
+          : profile.email || "",
+    }));
+  }, [profile]);
 
   const openDeleteConfirm = () => {
     Swal.fire({
@@ -20,7 +62,7 @@ export default function Profile() {
       title: "Are You Sure?",
       text: "Do you want to Delete Account?",
       showCancelButton: true,
-      confirmButtonText: "Yes,Delete",
+      confirmButtonText: "Yes, Delete",
       cancelButtonText: "Cancel",
       buttonsStyling: false,
       customClass: {
@@ -31,6 +73,20 @@ export default function Profile() {
         confirmButton: "sanaz-swal-confirm",
         cancelButton: "sanaz-swal-cancel",
         icon: "sanaz-swal-icon",
+      },
+      preConfirm: async () => {
+        try {
+          await deleteAccountFn(undefined).unwrap();
+          Cookies.remove("accessToken");
+          Cookies.remove("token");
+          Cookies.remove("forgetToken");
+          toast.success("Account deleted successfully");
+          router.push("/login");
+        } catch (err) {
+          console.error(err);
+          toast.error("Failed to delete account");
+          throw err;
+        }
       },
     });
   };
@@ -57,6 +113,44 @@ export default function Profile() {
     });
   };
 
+  const handleProfileUpdate = async () => {
+    try {
+      const data = {
+        fullName: updateDataForm.fullName,
+        email: updateDataForm.email,
+      };
+
+      await updateProfileFn(data).unwrap();
+
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update profile");
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!changePasswordForm.oldPassword || !changePasswordForm.newPassword) {
+      toast.error("Please enter current and new password");
+      return;
+    }
+    try {
+      await changePasswordFn({
+        oldPassword: changePasswordForm.oldPassword,
+        newPassword: changePasswordForm.newPassword,
+      }).unwrap();
+      toast.success("Password changed successfully");
+
+      // Clear password fields after successful change
+      setChangePasswordForm({
+        oldPassword: "",
+        newPassword: "",
+      });
+    } catch (error: any) {
+      toast.error("Failed to change password", error);
+    }
+  };
+
   return (
     <div className=" p-4 sm:p-6 lg:p-8">
       <div className="container mx-auto">
@@ -81,8 +175,13 @@ export default function Profile() {
                   <input
                     type="text"
                     placeholder="Robert Rossi"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    value={updateDataForm.fullName}
+                    onChange={(e) =>
+                      setUpdateDataForm({
+                        ...updateDataForm,
+                        fullName: e.target.value,
+                      })
+                    }
                     className="w-full px-4 py-2.5 rounded-full border border-gray-200 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   />
                 </div>
@@ -93,9 +192,15 @@ export default function Profile() {
                     Email Address
                   </label>
                   <input
+                    readOnly
                     type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={updateDataForm.email}
+                    onChange={(e) =>
+                      setUpdateDataForm({
+                        ...updateDataForm,
+                        email: e.target.value,
+                      })
+                    }
                     className="w-full px-4 py-2.5 rounded-full border border-transparent bg-[#416FFA66] text-sm text-black placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-600 transition"
                   />
                 </div>
@@ -116,8 +221,12 @@ export default function Profile() {
 
                 {/* Save Button */}
                 <div className="flex justify-end">
-                  <button className="px-8 py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-full transition-colors">
-                    Save
+                  <button
+                    onClick={handleProfileUpdate}
+                    disabled={isLoading}
+                    className={`px-8 py-2.5 text-white text-sm font-semibold rounded-full transition-colors ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"}`}
+                  >
+                    {isLoading ? "Saving..." : "Save"}
                   </button>
                 </div>
               </div>
@@ -138,8 +247,14 @@ export default function Profile() {
                   <div className="relative">
                     <input
                       type={showCurrentPassword ? "text" : "password"}
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      value={changePasswordForm.oldPassword}
+                      placeholder="••••••"
+                      onChange={(e) =>
+                        setChangePasswordForm({
+                          ...changePasswordForm,
+                          oldPassword: e.target.value,
+                        })
+                      }
                       className="w-full px-4 py-2.5 pr-12 rounded-full border border-gray-200 text-sm text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     />
                     <button
@@ -162,8 +277,14 @@ export default function Profile() {
                   <div className="relative">
                     <input
                       type={showNewPassword ? "text" : "password"}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
+                      value={changePasswordForm.newPassword}
+                      placeholder="••••••"
+                      onChange={(e) =>
+                        setChangePasswordForm({
+                          ...changePasswordForm,
+                          newPassword: e.target.value,
+                        })
+                      }
                       className="w-full px-4 py-2.5 pr-12 rounded-full border border-gray-200 text-sm text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     />
                     <button
@@ -178,7 +299,10 @@ export default function Profile() {
 
                 {/* Save Button */}
                 <div className="flex justify-end">
-                  <button className="px-8 py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-full transition-colors">
+                  <button
+                    onClick={handleChangePassword}
+                    className="px-8 py-2.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-full transition-colors"
+                  >
                     Save
                   </button>
                 </div>
@@ -194,9 +318,11 @@ export default function Profile() {
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
                   <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 ring-2 ring-blue-100">
-                    <img
-                      src="https://i.pravatar.cc/64?img=11"
-                      alt="Robert Rossi"
+                    <Image
+                      src={profileData?.profileImage}
+                      alt={profileData?.fullName || "User Avatar"}
+                      width={200}
+                      height={200}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -209,10 +335,10 @@ export default function Profile() {
                 {/* Name & Email */}
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base font-bold text-gray-900 truncate">
-                    Robert Rossi!
+                    {updateDataForm.fullName || profileData?.fullName || "User"}
                   </h3>
                   <p className="text-sm text-gray-500 truncate">
-                    robertrossi@gmail.com
+                    {updateDataForm.email || profileData?.email || ""}
                   </p>
                   {/* <span
                     className="mt-2 inline-flex items-center rounded-full px-6 py-1.5 text-[18px] font-semibold text-[#7A5B00]"

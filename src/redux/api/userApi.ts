@@ -12,8 +12,17 @@ const userApi = baseApi.injectEndpoints({
 
     updateProfile: builder.mutation({
       query: (data) => ({
-        url: `/auth/set-profile`,
-        method: "PUT",
+        url: `/auth/profile`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["User"],
+    }),
+
+    forgotPassword: builder.mutation({
+      query: (data) => ({
+        url: `/auth/send-otp`,
+        method: "POST",
         body: data,
       }),
       invalidatesTags: ["User"],
@@ -50,10 +59,27 @@ const userApi = baseApi.injectEndpoints({
       query: ({ newPassword, forgetToken }) => ({
         url: `/auth/reset-password`,
         method: "PATCH",
-        body: {newPassword},
+        body: { newPassword, forgetToken },
         headers: {
-          Authorization: `${forgetToken}`, 
+          Authorization: `${forgetToken}`,
         },
+      }),
+      invalidatesTags: ["User"],
+    }),
+
+    changePassword: builder.mutation({
+      query: (data) => ({
+        url: `/auth/change-password`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["User"],
+    }),
+
+    deleteAccount: builder.mutation({
+      query: () => ({
+        url: `/auth/delete-account`,
+        method: "DELETE",
       }),
       invalidatesTags: ["User"],
     }),
@@ -63,8 +89,11 @@ const userApi = baseApi.injectEndpoints({
 export const {
   useGetMyProfileQuery,
   useUpdateProfileMutation,
+  useForgotPasswordMutation,
   useSendContactMutation,
   useResetPasswordSentOtpMutation,
   useResetPasswordVerifyOtpMutation,
   useResetPasswordMutation,
+  useChangePasswordMutation,
+  useDeleteAccountMutation,
 } = userApi;
