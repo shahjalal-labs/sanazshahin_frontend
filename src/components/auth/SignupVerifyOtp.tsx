@@ -210,7 +210,7 @@ export default function SignupVerifyOtp() {
           <Button
             type="submit"
             disabled={!isOtpComplete || isLoading}
-            className="w-full bg-primary text-white font-medium py-6 px-4 rounded-[40px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-600"
+            className="w-full bg-primary text-white font-medium py-6 px-4 rounded-[40px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <div className="flex items-center justify-center">
