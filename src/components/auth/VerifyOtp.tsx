@@ -101,7 +101,8 @@ export default function VerifyOTPPage() {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-primary hover:bg-orange-600 text-white font-medium py-6 px-4 rounded-[40px] transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-primary hover:opacity-90
+             text-white font-medium py-6 px-4 rounded-[40px] transition-colors flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>

@@ -99,13 +99,12 @@ export default function SignUpPage() {
         // phone: formData.phone,
         password: formData.password,
       };
-      console.log("Submitting registration with data:", bodyData);
+
       // Call the registration API
       const response = await userRegistrationFn(bodyData).unwrap();
 
       // Check if registration was successful
       if (response.success) {
-        console.log("Registration successful:", response);
         toast.success(
           "Registration successful! Please check your email for the OTP.",
         );

@@ -9,7 +9,7 @@ const publicPaths = [
   "/reset-password",
   "/verify-otp",
   // Add other public paths like marketing pages, etc.
-  "/", // Assuming the homepage is public
+  "/signup/verify-otp", // Assuming the homepage is public
 ];
 
 // Define paths for assets, which should also be public
