@@ -1,11 +1,12 @@
 "use client";
 
-import { recipes } from "@/lib/recipes";
+import { useGetAllScrapedRecipesQuery } from "@/redux/api/recipeApi";
 import { Bookmark } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
 function SaveList() {
+  const { data: recipes } = useGetAllScrapedRecipesQuery({ page: 1 });
   const [savedRecipes, setSavedRecipes] = useState<number[]>([
     1, 2, 3, 4, 5, 6,
   ]);
@@ -26,12 +27,12 @@ function SaveList() {
         </div>
 
         <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-          {recipes.slice(0, 6).map((recipe) => (
+          {recipes?.slice(0, 6).map((recipe: Recipe) => (
             <article key={recipe.id} className="text-center">
               <div className="relative aspect-square overflow-hidden rounded-[22px] border border-[#3157BC] bg-slate-200">
                 <Image
                   src={recipe.image}
-                  alt={recipe.detailTitle}
+                  alt={recipe.title}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 340px"
                   className="object-cover"

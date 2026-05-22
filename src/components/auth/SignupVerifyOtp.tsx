@@ -53,6 +53,7 @@ export default function SignupVerifyOtp() {
     e.preventDefault();
 
     const otpCode = otp.join("");
+    console.log("Submitted OTP:", otpCode);
 
     // Validate OTP
     if (otpCode.length !== 4) {

@@ -1,30 +1,32 @@
 "use client";
 
-import { recipes } from "@/lib/recipes";
+import { useGetAllScrapedRecipesQuery } from "@/redux/api/recipeApi";
 import { Bookmark, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { BeautifulSpinner } from "../ui/BeautifulSpinner";
 
 export default function RecipeGrid() {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
-  const [savedRecipes, setSavedRecipes] = useState<number[]>([]);
+  const [savedRecipes, setSavedRecipes] = useState<string[]>([]);
   const [recipeType, setRecipeType] = useState("all");
   const [ingredient, setIngredient] = useState("all");
   const [feature, setFeature] = useState("all");
-  const recipesPerPage = 6;
 
-  const totalPages = Math.ceil(recipes.length / recipesPerPage);
-  const startIndex = (currentPage - 1) * recipesPerPage;
-  const displayedRecipes = recipes.slice(
-    startIndex,
-    startIndex + recipesPerPage,
-  );
+  const {
+    data: recipesData,
+    isLoading,
+    error,
+  } = useGetAllScrapedRecipesQuery({ page: currentPage });
 
-  const toggleSave = (id: number) => {
+  const recipes = recipesData?.data?.recipes || [];
+  const totalPages = recipesData?.data?.totalPages || 1;
+
+  const toggleSave = (link: string) => {
     setSavedRecipes((prev) =>
-      prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id],
+      prev.includes(link) ? prev.filter((r) => r !== link) : [...prev, link],
     );
   };
 
@@ -67,6 +69,22 @@ export default function RecipeGrid() {
     },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <BeautifulSpinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen items-center justify-center text-red-500">
+        Error loading recipes. Please try again later.
+      </div>
+    );
+  }
+
   return (
     <div className="w-full pt-[104px]">
       {/* Header Section */}
@@ -105,60 +123,65 @@ export default function RecipeGrid() {
       <div className="px-4 pb-8">
         <div className="container mx-auto ">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayedRecipes.map((recipe) => (
-              <div
-                key={recipe.id}
-                className="cursor-pointer"
-                onClick={() => router.push(`/recipe/${recipe.id}`)}
-                role="link"
-                tabIndex={0}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    router.push(`/recipe/${recipe.id}`);
-                  }
-                }}
-              >
-                {/* Recipe Image */}
-                <div className="relative aspect-square overflow-hidden rounded-[18px] border border-[#2649BF] bg-slate-200">
-                  <Image
-                    src={recipe.image}
-                    alt={recipe.title}
-                    fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
-                    className="object-cover transition-transform duration-300 hover:scale-[1.03]"
-                  />
-                  {/* <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.1)_0%,rgba(0,0,0,0.3)_100%)]" /> */}
-                  {/* Save Button */}
-                  <button
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      toggleSave(recipe.id);
-                    }}
-                    className="absolute right-3 top-3 z-10 text-white/95 transition-opacity hover:opacity-80"
-                    aria-label="Save recipe"
-                  >
-                    <Bookmark
-                      className="h-5 w-5"
-                      fill={
-                        savedRecipes.includes(recipe.id)
-                          ? "currentColor"
-                          : "none"
-                      }
-                      stroke="currentColor"
-                      strokeWidth={2.2}
+            {recipes.map((recipe: Recipe) => {
+              const recipeName = recipe.link.substring(
+                recipe.link.lastIndexOf("/") + 1,
+              );
+              return (
+                <div
+                  key={recipe.link}
+                  className="cursor-pointer"
+                  onClick={() => router.push(`/recipe/${recipeName}`)}
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      router.push(`/recipe/${recipeName}`);
+                    }
+                  }}
+                >
+                  {/* Recipe Image */}
+                  <div className="relative aspect-square overflow-hidden rounded-[18px] border border-[#2649BF] bg-slate-200">
+                    <Image
+                      src={recipe.image}
+                      alt={recipe.title}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
+                      className="object-cover transition-transform duration-300 hover:scale-[1.03]"
                     />
-                  </button>
-                </div>
+                    {/* <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.1)_0%,rgba(0,0,0,0.3)_100%)]" /> */}
+                    {/* Save Button */}
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        toggleSave(recipe.link);
+                      }}
+                      className="absolute right-3 top-3 z-10 text-white/95 transition-opacity hover:opacity-80"
+                      aria-label="Save recipe"
+                    >
+                      <Bookmark
+                        className="h-5 w-5"
+                        fill={
+                          savedRecipes.includes(recipe.link)
+                            ? "currentColor"
+                            : "none"
+                        }
+                        stroke="currentColor"
+                        strokeWidth={2.2}
+                      />
+                    </button>
+                  </div>
 
-                {/* Recipe Title */}
-                <div className="px-2 pt-2">
-                  <h3 className="whitespace-pre-line text-center font-semibold leading-[1.35] text-[#0D3692] [font-size:clamp(18px,1.14vw,29px)]">
-                    {recipe.title}
-                  </h3>
+                  {/* Recipe Title */}
+                  <div className="px-2 pt-2">
+                    <h3 className="whitespace-pre-line text-center font-semibold leading-[1.35] text-[#0D3692] [font-size:clamp(18px,1.14vw,29px)]">
+                      {recipe.title}
+                    </h3>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

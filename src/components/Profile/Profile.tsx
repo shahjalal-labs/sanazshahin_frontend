@@ -1,16 +1,16 @@
 "use client";
 
-import { useUpdateProfileMutation } from "@/redux/api/registerApi";
 import {
   useChangePasswordMutation,
   useDeleteAccountMutation,
   useGetMyProfileQuery,
+  useUpdateProfileMutation,
 } from "@/redux/api/userApi";
 import Cookies from "js-cookie";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import Swal from "sweetalert2";
 
@@ -26,6 +26,9 @@ export default function Profile() {
     fullName: "",
     email: "",
   });
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<string>("");
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
 
   const [changePasswordForm, setChangePasswordForm] = useState({
     oldPassword: "",
@@ -54,6 +57,14 @@ export default function Profile() {
           : profile.email || "",
     }));
   }, [profile]);
+
+  useEffect(() => {
+    return () => {
+      if (previewImage.startsWith("blob:")) {
+        URL.revokeObjectURL(previewImage);
+      }
+    };
+  }, [previewImage]);
 
   const openDeleteConfirm = () => {
     Swal.fire({
@@ -115,14 +126,23 @@ export default function Profile() {
 
   const handleProfileUpdate = async () => {
     try {
-      const data = {
-        fullName: updateDataForm.fullName,
-        email: updateDataForm.email,
-      };
+      const formData = new FormData();
+      formData.append("fullName", updateDataForm.fullName);
+      formData.append("email", updateDataForm.email);
 
-      await updateProfileFn(data).unwrap();
+      if (selectedImageFile) {
+        formData.append("profileImage", selectedImageFile);
+      }
 
-      toast.success("Profile updated successfully");
+      await updateProfileFn(formData).unwrap();
+
+      if (selectedImageFile) {
+        toast.success("Profile and image updated successfully");
+      } else {
+        toast.success("Profile updated successfully");
+      }
+
+      setSelectedImageFile(null);
     } catch (error) {
       console.error(error);
       toast.error("Failed to update profile");
@@ -318,18 +338,51 @@ export default function Profile() {
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
                   <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 ring-2 ring-blue-100">
-                    <Image
-                      src={profileData?.profileImage}
-                      alt={profileData?.fullName || "User Avatar"}
-                      width={200}
-                      height={200}
-                      className="w-full h-full object-cover"
-                    />
+                    {previewImage || profile?.profileImage ? (
+                      <Image
+                        src={previewImage || profile?.profileImage}
+                        alt={profile?.fullName || "User Avatar"}
+                        width={200}
+                        height={200}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-gray-500">
+                        NA
+                      </div>
+                    )}
                   </div>
                   {/* Edit icon badge */}
-                  <button className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-white rounded-full border border-gray-200 flex items-center justify-center shadow-sm hover:bg-gray-50 transition">
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-white rounded-full border border-gray-200 flex items-center justify-center shadow-sm hover:bg-gray-50 transition"
+                  >
                     <PencilIcon />
                   </button>
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+
+                      if (!file.type.startsWith("image/")) {
+                        toast.error("Please select a valid image file");
+                        return;
+                      }
+
+                      if (previewImage.startsWith("blob:")) {
+                        URL.revokeObjectURL(previewImage);
+                      }
+
+                      const objectUrl = URL.createObjectURL(file);
+                      setSelectedImageFile(file);
+                      setPreviewImage(objectUrl);
+                    }}
+                  />
                 </div>
 
                 {/* Name & Email */}

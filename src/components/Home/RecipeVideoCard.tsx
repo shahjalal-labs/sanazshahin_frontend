@@ -1,5 +1,6 @@
 "use client";
 
+import { useGetAllScrapedRecipesQuery } from "@/redux/api/recipeApi";
 import { Play } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
@@ -43,6 +44,7 @@ export default function RecipeVideoCard({
 }: RecipeVideoCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const embedUrl = useMemo(() => getYouTubeEmbedUrl(videoUrl), [videoUrl]);
+  const {data: recipes} = useGetAllScrapedRecipesQuery({  });
 
   return (
     <div className={`overflow-hidden rounded-[30px] ${className ?? ""}`.trim()}>
