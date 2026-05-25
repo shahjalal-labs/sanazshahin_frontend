@@ -1,102 +1,124 @@
 "use client";
 
-import m1 from "@/assets/meal/m1.jpg";
-import m2 from "@/assets/meal/m2.jpg";
-import m3 from "@/assets/meal/m3.jpg";
-import m4 from "@/assets/meal/m4.jpg";
-import m5 from "@/assets/meal/m5.jpg";
-import m7 from "@/assets/meal/m7.png";
-import RecipeAddModal from "@/components/MyRecipeBox/RecipeAddModal";
-import RecipeEditModal from "@/components/MyRecipeBox/RecipeEditModal";
+import {
+  useDeleteMyRecipeMutation,
+  useMyRecipeDetailsQuery,
+  useMyRecipesQuery,
+} from "@/redux/api/recipeApi";
 import { ChevronDown, ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import Image, { StaticImageData } from "next/image";
+import Image from "next/image";
 import { useState } from "react";
+import { toast } from "sonner";
+import Swal from "sweetalert2";
+import RecipeAddModal from "./RecipeAddModal";
+import RecipeEditModal from "./RecipeEditModal";
 
-type RecipeItem = {
-  id: number;
-  title: string;
-  image: StaticImageData;
-  details: {
-    duration: string;
-    energy: string;
-    features: string[];
-    needs: string[];
-    nutrition: string[];
-    howTo: string;
-    youtubeLink: string;
-  };
-};
-
-const baseDetails = {
-  duration: "30 min",
-  energy: "350",
-  features: ["Meal Prep Friendly", "Leftover Friendly"],
-  needs: [
-    "1 1/2 cups basmati rice, rinsed and soaked for 30 minutes",
-    "2 tbsp olive oil or avocado oil",
-    "1 small onion, finely chopped",
-    "2 cloves garlic, minced",
-    "1 1/2 cups green beans, trimmed and cut into 1-inch",
-  ],
-  nutrition: [
-    "Servings 1 Calories 290 Carbohydrates 48g Carbohydrates 48g",
-    "Fat 8g Fiber 4g Protein 6g Monounsaturated 5g Polyunsaturated 1g",
-    "Saturated 1g Trans 0g Vitamin A 90 IU Vitamin C 8 mg",
-    "Vitamin D 0 mg Calcium 40 mg Iron 2 mg Potassium 350 mg",
-    "cholesterol 0 mg Sodium 200 mg Sugar 4 g",
-  ],
-  howTo:
-    "Preheat oven to 4000F (2000C). Toss chickpeas with paprika and onion powder. Spread on a baking sheet and bake for about 20 minutes, until crispy.",
-  youtubeLink: "https://www.youtube.com/shorts/gkVAApdMAh0",
-};
-
-const recipeList: RecipeItem[] = [
-  {
-    id: 1,
-    title: "Green Goddess Dill Salad (with black-eyed peas)",
-    image: m1,
-    details: baseDetails,
-  },
-  {
-    id: 2,
-    title: "Kale Caesar Salad (vegan)",
-    image: m2,
-    details: baseDetails,
-  },
-  {
-    id: 3,
-    title: "Popcorn in a Bag",
-    image: m7,
-    details: baseDetails,
-  },
-  {
-    id: 4,
-    title: "Sprouted Caesar Salad",
-    image: m4,
-    details: baseDetails,
-  },
-  {
-    id: 5,
-    title: "Pistachio Granola Bars",
-    image: m3,
-    details: baseDetails,
-  },
-  {
-    id: 6,
-    title: "Chocolate Chip Oat Muffins (vegan + gluten-free)",
-    image: m5,
-    details: baseDetails,
-  },
-];
+const ITEMS_PER_PAGE = 9;
 
 function RecipeBox() {
-  const [selectedRecipe, setSelectedRecipe] = useState<RecipeItem | null>(null);
-  const [editingRecipe, setEditingRecipe] = useState<RecipeItem | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<MyRecipe | null>(null);
+  const [editingRecipe, setEditingRecipe] = useState<MyRecipe | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const handleOpenEditModal = (recipe: RecipeItem) => {
+  const { data: myRecipes } = useMyRecipesQuery({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+  });
+  const recipeList = myRecipes?.result;
+  const recipes = recipeList?.recipes as MyRecipe[] | undefined;
+  const totalPages =
+    recipeList?.totalPages ??
+    recipeList?.pagination?.totalPages ??
+    Math.max(
+      1,
+      Math.ceil(
+        (recipeList?.totalItems ?? recipeList?.totalCount ?? 0) /
+          ITEMS_PER_PAGE,
+      ),
+    );
+
+  const { data: recipeDetailsResponse } = useMyRecipeDetailsQuery(
+    selectedRecipe?.id ?? "",
+    {
+      skip: !selectedRecipe?.id,
+    },
+  );
+  const recipeDetails = (
+    recipeDetailsResponse as MyRecipeDetailsResponse | undefined
+  )?.result;
+  const [deleteMyRecipe] = useDeleteMyRecipeMutation();
+
+  const handleOpenEditModal = (recipe: MyRecipe) => {
     setSelectedRecipe(null);
     setEditingRecipe(recipe);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const getVisiblePages = () => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const pages: Array<number | "..."> = [1];
+    const startPage = Math.max(2, currentPage - 1);
+    const endPage = Math.min(totalPages - 1, currentPage + 1);
+
+    if (startPage > 2) {
+      pages.push("...");
+    }
+
+    for (let page = startPage; page <= endPage; page += 1) {
+      pages.push(page);
+    }
+
+    if (endPage < totalPages - 1) {
+      pages.push("...");
+    }
+
+    pages.push(totalPages);
+    return pages;
+  };
+
+  const handleDeleteRecipe = async (recipeId: string) => {
+    const result = await Swal.fire({
+      icon: "question",
+      iconColor: "#0B2E9C",
+      title: "Delete recipe?",
+      text: "This action cannot be undone.",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
+      buttonsStyling: false,
+      customClass: {
+        popup: "sanaz-swal-popup",
+        title: "sanaz-swal-title",
+        htmlContainer: "sanaz-swal-html",
+        actions: "sanaz-swal-actions",
+        confirmButton: "sanaz-swal-confirm",
+        cancelButton: "sanaz-swal-cancel",
+        icon: "sanaz-swal-icon",
+      },
+    });
+
+    if (!result.isConfirmed) {
+      return;
+    }
+
+    try {
+      await deleteMyRecipe(recipeId).unwrap();
+      setSelectedRecipe(null);
+      toast.success("Recipe deleted successfully.");
+    } catch (error) {
+      toast.error(
+        "An error occurred while deleting the recipe. Please try again.",
+      );
+    }
   };
 
   return (
@@ -124,7 +146,7 @@ function RecipeBox() {
         </div>
 
         <div className="mt-7 grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
-          {recipeList.map((recipe) => (
+          {recipes?.map((recipe) => (
             <button
               key={recipe.id}
               type="button"
@@ -133,15 +155,15 @@ function RecipeBox() {
             >
               <div className="relative h-[280px] w-full overflow-hidden rounded-[26px] border border-[#4668C8] bg-white">
                 <Image
-                  src={recipe.image}
-                  alt={recipe.title}
+                  src={recipe.recipeImage}
+                  alt={recipe.recipeName}
                   fill
                   className="object-cover transition duration-300 group-hover:scale-[1.02]"
                   sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
                 />
               </div>
               <h2 className="mx-auto mt-3 max-w-[92%] text-center text-lg font-semibold leading-[1.3] text-[#1141B5]">
-                {recipe.title}
+                {recipe.recipeName}
               </h2>
             </button>
           ))}
@@ -150,32 +172,42 @@ function RecipeBox() {
         <div className="mt-10 flex items-center justify-end gap-3 text-sm font-semibold text-[#5C6470]">
           <button
             type="button"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
             className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#FCEBFA] text-[#D36BC0] transition hover:bg-[#F9DDF4]"
             aria-label="Previous page"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
 
-          <button
-            type="button"
-            className="inline-flex h-8 min-w-8 items-center justify-center rounded-[8px] bg-[#375BCC] px-2 text-white"
-            aria-label="Page 1"
-          >
-            1
-          </button>
-          <button type="button" className="px-1" aria-label="Page 2">
-            2
-          </button>
-          <button type="button" className="px-1" aria-label="Page 3">
-            3
-          </button>
-          <span className="px-1">...</span>
-          <button type="button" className="px-1" aria-label="Page 440">
-            440
-          </button>
+          <div className="flex items-center gap-1 px-1">
+            {getVisiblePages().map((page, index) =>
+              page === "..." ? (
+                <span key={`ellipsis-${index}`} className="px-1">
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => handlePageChange(page)}
+                  className={`inline-flex min-w-8 items-center justify-center rounded-[8px] px-2 py-1 transition ${
+                    currentPage === page
+                      ? "bg-[#375BCC] text-white"
+                      : "text-[#5C6470] hover:bg-[#EEF2FA]"
+                  }`}
+                  aria-label={`Page ${page}`}
+                >
+                  {page}
+                </button>
+              ),
+            )}
+          </div>
 
           <button
             type="button"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
             className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#FCEBFA] text-[#D36BC0] transition hover:bg-[#F9DDF4]"
             aria-label="Next page"
           >
@@ -186,8 +218,10 @@ function RecipeBox() {
 
       <RecipeDetailsModal
         recipe={selectedRecipe}
+        recipeDetails={recipeDetails}
         onClose={() => setSelectedRecipe(null)}
         onEdit={handleOpenEditModal}
+        onDelete={handleDeleteRecipe}
       />
 
       <RecipeEditModal
@@ -217,18 +251,31 @@ function FilterSelect({ label }: { label: string }) {
 
 function RecipeDetailsModal({
   recipe,
+  recipeDetails,
   onClose,
   onEdit,
+  onDelete,
 }: {
-  recipe: RecipeItem | null;
+  recipe: MyRecipe | null;
+  recipeDetails?: MyRecipeDetailsResponse["result"];
   onClose: () => void;
-  onEdit: (recipe: RecipeItem) => void;
+  onEdit: (recipe: MyRecipe) => void;
+  onDelete: (recipeId: string) => void | Promise<void>;
 }) {
   if (!recipe) {
     return null;
   }
 
-  const details = recipe.details;
+  const details = recipeDetails;
+  const recipeImage = details?.recipeImage || recipe.recipeImage;
+  const recipeName = details?.recipeName || recipe.recipeName;
+  const features = details?.features || [];
+  const aboutRecipe = details?.wyn || "";
+  const nutrition = details?.nutrition || "";
+  const howTo = details?.hymi || "";
+  const duration = details?.duration ?? "";
+  const energy = details?.energy ?? "";
+  const youtubeLink = details?.youtubeLink || "";
 
   return (
     <div
@@ -248,67 +295,64 @@ function RecipeDetailsModal({
             <div className="flex items-center justify-end gap-2 text-right text-[16px] font-medium text-[#212733] md:text-[17px]">
               <div className="relative h-8 w-8 overflow-hidden rounded-full">
                 <Image
-                  src={recipe.image}
-                  alt={recipe.title}
+                  src={recipeImage}
+                  alt={recipeName}
                   fill
                   className="object-cover"
                 />
               </div>
-              <span>{recipe.title.replace(" (vegan)", "")}</span>
+              <span>{recipeName}</span>
             </div>
           </DetailRow>
 
           <DetailRow label="Duration">
             <span className="text-[16px] font-medium text-[#111111] md:text-[17px]">
-              {details.duration}
+              {duration}
             </span>
           </DetailRow>
 
           <DetailRow label="Energy (kcal)">
             <span className="text-[16px] font-medium text-[#111111] md:text-[17px]">
-              {details.energy}
+              {energy}
             </span>
           </DetailRow>
 
           <DetailRow label="Features">
             <ul className="space-y-1 text-[16px] font-medium text-[#111111] md:text-[17px]">
-              <li>🟡 {details.features[0]}</li>
-              <li>🍽️ {details.features[1]}</li>
+              {features.map((feature, index) => (
+                <li key={feature}>
+                  {index === 0 ? "🟡" : index === 1 ? "🍽️" : "•"} {feature}
+                </li>
+              ))}
             </ul>
           </DetailRow>
 
           <DetailRow label="What You'll Need">
-            <ul className="space-y-2 text-[16px] leading-[1.45] text-[#111111] md:text-[17px]">
-              <li>🍚 {details.needs[0]}</li>
-              <li>🧂 {details.needs[1]}</li>
-              <li>🧅 {details.needs[2]}</li>
-              <li>🧄 {details.needs[3]}</li>
-              <li>🧪 {details.needs[4]}</li>
-            </ul>
+            <HtmlContent className="max-w-[560px] text-[16px] leading-[1.45] text-[#111111] md:text-[17px]">
+              {aboutRecipe}
+            </HtmlContent>
           </DetailRow>
 
           <DetailRow label="Nutrition">
-            <div className="space-y-1 text-[15px] leading-[1.45] text-[#111111] md:text-[16px]">
-              {details.nutrition.map((line) => (
-                <p key={line}>{line}</p>
-              ))}
-            </div>
+            <HtmlContent className="max-w-[560px] text-[15px] leading-[1.45] text-default md:text-[16px]">
+              {nutrition}
+            </HtmlContent>
           </DetailRow>
 
           <DetailRow label="How You'll Make It">
-            <p className="max-w-[560px] text-[16px] leading-[1.45] text-[#111111] md:text-[17px]">
-              {details.howTo}
-            </p>
+            <HtmlContent className="max-w-[560px] text-[16px] leading-[1.45] text-default md:text-[17px]">
+              {howTo}
+            </HtmlContent>
           </DetailRow>
 
           <DetailRow label="Youtube link" isLast>
             <a
-              href={details.youtubeLink}
+              href={youtubeLink}
               target="_blank"
               rel="noreferrer"
               className="break-all text-[16px] text-[#111111] underline-offset-2 hover:underline md:text-[17px]"
             >
-              {details.youtubeLink}
+              {youtubeLink}
             </a>
           </DetailRow>
         </div>
@@ -322,6 +366,7 @@ function RecipeDetailsModal({
             Close
           </button>
           <button
+            onClick={() => onDelete(recipe.id)}
             type="button"
             className="h-11 min-w-[118px] rounded-full border border-[#4D63E9] px-7 text-[16px] font-medium text-[#3A4BD4]"
           >
@@ -360,6 +405,18 @@ function DetailRow({
       </p>
       <div className="md:text-right">{children}</div>
     </div>
+  );
+}
+
+function HtmlContent({
+  children,
+  className,
+}: {
+  children: string;
+  className?: string;
+}) {
+  return (
+    <div className={className} dangerouslySetInnerHTML={{ __html: children }} />
   );
 }
 

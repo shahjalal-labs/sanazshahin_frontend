@@ -1,26 +1,84 @@
 "use client";
 
+import {
+  useGetNotificationsOptionsQuery,
+  useToggleNotificationOptionMutation,
+} from "@/redux/api/notificationApi";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-const initialSettings = [
-  { id: "meal", label: "Meal Reminder", enabled: true },
-  { id: "grocery", label: "Grocery Reminder", enabled: true },
-  { id: "new", label: "New Recipes", enabled: true },
-  { id: "weekly", label: "Weekly Summary", enabled: true },
-];
+interface NotificationOption {
+  id: string;
+  label: string;
+  enabled: boolean;
+}
 
 function Notifications() {
   const router = useRouter();
-  const [settings, setSettings] = useState(initialSettings);
 
-  const toggleSetting = (id: string) => {
-    setSettings((prev) =>
-      prev.map((setting) =>
-        setting.id === id ? { ...setting, enabled: !setting.enabled } : setting,
-      ),
+  const { data } = useGetNotificationsOptionsQuery({});
+  const [settings, setSettings] = useState<NotificationOption[]>([]);
+  const [toggleNotificationOption] = useToggleNotificationOptionMutation();
+
+  useEffect(() => {
+    const result = data?.result;
+
+    if (!result) {
+      setSettings([]);
+      return;
+    }
+
+    if (Array.isArray(result)) {
+      setSettings(result);
+      return;
+    }
+
+    const mapped: NotificationOption[] = [
+      {
+        id: "mealReminder",
+        label: "Meal Reminder",
+        enabled: !!(result as any).mealReminder,
+      },
+      {
+        id: "groceryReminder",
+        label: "Grocery Reminder",
+        enabled: !!(result as any).groceryReminder,
+      },
+      {
+        id: "newRecipes",
+        label: "New Recipes",
+        enabled: !!(result as any).newRecipes,
+      },
+      {
+        id: "weeklySummary",
+        label: "Weekly Summary",
+        enabled: !!(result as any).weeklySummary,
+      },
+    ];
+
+    setSettings(mapped);
+  }, [data]);
+
+  const toggleSetting = async (id: string) => {
+    const prev = settings;
+    const newSettings = prev.map((setting) =>
+      setting.id === id ? { ...setting, enabled: !setting.enabled } : setting,
     );
+
+    setSettings(newSettings);
+
+    try {
+      const updated = newSettings.find((s) => s.id === id);
+      if (!updated) throw new Error("Invalid setting");
+
+      await toggleNotificationOption({ option: id }).unwrap();
+      toast.success("Notification setting saved");
+    } catch (err) {
+      setSettings(prev);
+      toast.error("Failed to save notification setting");
+    }
   };
 
   return (

@@ -19,7 +19,7 @@ export const baseApi = createApi({
     },
   }),
   endpoints: () => ({}),
-  tagTypes: ["testdata", "User", "Recipe"],
+  tagTypes: ["testdata", "User", "Recipe", "Notification", "Protein"],
 });
 
 export default baseApi;

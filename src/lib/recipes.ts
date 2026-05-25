@@ -55,3 +55,26 @@ type ScrapedRecipe = {
   category?: string;
   features?: string[];
 };
+
+interface MyRecipe {
+  id: string;
+  recipeName: string;
+  recipeImage: string;
+}
+
+interface MyRecipeDetailsResponse {
+  success?: boolean;
+  message?: string;
+  result?: {
+    id: string;
+    recipeName: string;
+    duration: number | string;
+    energy: number | string;
+    features: string[];
+    wyn: string;
+    nutrition: string;
+    hymi: string;
+    recipeImage: string;
+    youtubeLink: string;
+  };
+}

@@ -1,22 +1,55 @@
 "use client";
 
+import { useGetProteinCalculationMutation } from "@/redux/api/proteinApi";
 import { ArrowLeft, Check, ChevronRight, User } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-type Step = 1 | 2 | 4;
+type Step = 1 | 2 | 3 | 4;
 type Gender = "male" | "female";
 type Unit = "kg" | "lb";
+type HeightUnit = "cm" | "inch";
+
+type ProteinCalculationResponse = {
+  protein?: number;
+  proteinGrams?: number;
+  result?: number;
+  data?: {
+    protein?: number;
+    proteinGrams?: number;
+    result?: number;
+  };
+};
 
 const MIN_KG = 35;
 const MAX_KG = 120;
 const MIN_LB = Math.round(MIN_KG * 2.20462);
 const MAX_LB = Math.round(MAX_KG * 2.20462);
+const MIN_CM = 120;
+const MAX_CM = 220;
+const MIN_INCH = 47;
+const MAX_INCH = 87;
 
 const RING_BUTTON_CLASS =
   "relative grid h-[86px] w-[86px] place-items-center rounded-full bg-[#0E2F97] text-white transition-transform hover:scale-[1.03]";
 
 const RING_OUTER_CLASS =
   "relative grid h-[112px] w-[112px] place-items-center rounded-full border-[4px] border-[#C4CDE4]";
+
+function resolveProteinValue(response: unknown) {
+  const payload = response as ProteinCalculationResponse | number | string;
+  const candidate =
+    typeof payload === "number" || typeof payload === "string"
+      ? payload
+      : (payload?.protein ??
+        payload?.proteinGrams ??
+        payload?.result ??
+        payload?.data?.protein ??
+        payload?.data?.proteinGrams ??
+        payload?.data?.result);
+
+  const value = Number(candidate);
+  return Number.isFinite(value) ? Math.round(value) : null;
+}
 
 function ProgressButton({
   onClick,
@@ -75,6 +108,13 @@ function ProteinCalculator() {
   const [gender, setGender] = useState<Gender>("female");
   const [unit, setUnit] = useState<Unit>("kg");
   const [weightKg, setWeightKg] = useState(60);
+  const [heightUnit, setHeightUnit] = useState<HeightUnit>("cm");
+  const [heightValue, setHeightValue] = useState(177.8);
+  const [proteinValue, setProteinValue] = useState<number | null>(null);
+  const [calculationError, setCalculationError] = useState<string | null>(null);
+
+  const [getProteinCalculation, { isLoading }] =
+    useGetProteinCalculationMutation();
 
   const displayWeight = useMemo(() => {
     if (unit === "kg") {
@@ -84,10 +124,51 @@ function ProteinCalculator() {
     return Math.round(weightKg * 2.20462);
   }, [unit, weightKg]);
 
-  const proteinValue = useMemo(() => {
-    const baseKg = unit === "kg" ? displayWeight : displayWeight * 0.453592;
-    return Math.round(baseKg * 1.18);
-  }, [displayWeight, unit]);
+  const apiWeight = unit === "kg" ? Number(weightKg.toFixed(1)) : displayWeight;
+  const displayHeightCm =
+    heightUnit === "cm" ? heightValue : heightValue * 2.54;
+  const displayHeightIn =
+    heightUnit === "inch" ? heightValue : heightValue / 2.54;
+
+  useEffect(() => {
+    if (step !== 4) {
+      return;
+    }
+
+    let isActive = true;
+
+    const runCalculation = async () => {
+      setCalculationError(null);
+      setProteinValue(null);
+
+      try {
+        const response = await getProteinCalculation({
+          gender,
+          heightCm: Number(displayHeightCm.toFixed(1)),
+          weight: apiWeight,
+          weightUnit: unit,
+        }).unwrap();
+
+        if (!isActive) {
+          return;
+        }
+
+        setProteinValue(resolveProteinValue(response));
+      } catch {
+        if (!isActive) {
+          return;
+        }
+
+        setCalculationError("We could not calculate protein right now.");
+      }
+    };
+
+    runCalculation();
+
+    return () => {
+      isActive = false;
+    };
+  }, [apiWeight, displayHeightCm, gender, getProteinCalculation, step, unit]);
 
   const sliderMin = unit === "kg" ? MIN_KG : MIN_LB;
   const sliderMax = unit === "kg" ? MAX_KG : MAX_LB;
@@ -107,7 +188,7 @@ function ProteinCalculator() {
         ];
 
   const nextStep = () => {
-    setStep((prev) => (prev === 1 ? 2 : 4));
+    setStep((prev) => (prev === 1 ? 2 : prev === 2 ? 3 : 4));
   };
 
   const previousStep = () => {
@@ -297,10 +378,87 @@ function ProteinCalculator() {
               </div>
 
               <div className="mt-3 flex justify-center pb-2 sm:mt-6">
-                <ProgressButton
-                  onClick={nextStep}
-                  label="Continue to summary"
+                <ProgressButton onClick={nextStep} label="Continue to height" />
+              </div>
+            </div>
+          ) : null}
+
+          {step === 3 ? (
+            <div className="mx-auto flex min-h-[520px] w-full max-w-[760px] flex-col">
+              <div className="pt-4 text-center">
+                <h2 className="text-[32px] font-bold leading-tight text-[#121212]">
+                  Your height
+                </h2>
+                <p className="mx-auto mt-3 max-w-[420px] text-[24px] leading-[1.4] text-[#8B93A2]">
+                  We will use this data to personalize your protein target
+                </p>
+              </div>
+
+              <div className="mx-auto mt-10 flex w-full max-w-[380px] flex-col gap-4 rounded-[28px] bg-white px-6 py-8 shadow-[0_16px_34px_rgba(18,31,74,0.08)]">
+                <label className="text-center text-lg font-semibold text-[#3E425D]">
+                  Height
+                </label>
+                <div className="mx-auto inline-flex rounded-full bg-[#F0F0F4] p-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (heightUnit === "cm") {
+                        return;
+                      }
+
+                      setHeightValue(Math.round(heightValue * 2.54 * 10) / 10);
+                      setHeightUnit("cm");
+                    }}
+                    className={`h-12 min-w-[82px] rounded-full px-4 text-[20px] font-semibold transition-colors ${
+                      heightUnit === "cm"
+                        ? "bg-[#0E2F97] text-white"
+                        : "text-[#8B93A2]"
+                    }`}
+                  >
+                    cm
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (heightUnit === "inch") {
+                        return;
+                      }
+
+                      setHeightValue(
+                        Math.round((heightValue / 2.54) * 10) / 10,
+                      );
+                      setHeightUnit("inch");
+                    }}
+                    className={`h-12 min-w-[82px] rounded-full px-4 text-[20px] font-semibold transition-colors ${
+                      heightUnit === "inch"
+                        ? "bg-[#0E2F97] text-white"
+                        : "text-[#8B93A2]"
+                    }`}
+                  >
+                    inch
+                  </button>
+                </div>
+                <input
+                  type="number"
+                  min={heightUnit === "cm" ? MIN_CM : MIN_INCH}
+                  max={heightUnit === "cm" ? MAX_CM : MAX_INCH}
+                  step="0.1"
+                  value={heightValue}
+                  onChange={(event) =>
+                    setHeightValue(Number(event.target.value))
+                  }
+                  className="h-16 rounded-2xl border border-[#D7DFEF] bg-[#F8F8FB] px-4 text-center text-[32px] font-semibold text-[#121212] outline-none transition-colors focus:border-[#0E2F97]"
+                  aria-label={`Set height in ${heightUnit}`}
                 />
+                <p className="text-center text-sm text-[#8B93A2]">
+                  {heightUnit === "cm"
+                    ? `${displayHeightCm.toFixed(1)} cm`
+                    : `${displayHeightIn.toFixed(1)} inch`}
+                </p>
+              </div>
+
+              <div className="mt-auto flex justify-center pb-2 pt-14 sm:mt-6">
+                <ProgressButton onClick={nextStep} label="Calculate protein" />
               </div>
             </div>
           ) : null}
@@ -309,19 +467,29 @@ function ProteinCalculator() {
       {step === 4 ? (
         <div className="mx-auto w-full max-w-[900px] rounded-[32px] bg-[#061E68] px-4 py-8 text-center text-white sm:px-10 sm:py-12 md:px-14 md:py-14 mt-10">
           <h2 className="text-[24px] font-bold leading-tight ">
-            Azizur&apos;s Protein Calculation
+            Your Protein Calculation
           </h2>
           <p className="mt-4 text-base text-[#C8D3F6] ">
             To hit your goals we recommend you need:
           </p>
 
           <div className="mx-auto mt-9 flex  max-w-fit items-center justify-center rounded-[24px] bg-[#F4F5F8] px-[150px] py-4 text-[#0E2F97]">
-            <span className="text-2xl font-bold ">{proteinValue}g</span>
+            <span className="text-2xl font-bold ">
+              {isLoading
+                ? "Calculating..."
+                : proteinValue !== null
+                  ? `${proteinValue}g`
+                  : "--"}
+            </span>
           </div>
 
           <p className="mt-4 text-2xl leading-tight text-[#C8D3F6] ">
             of Protein Per Day
           </p>
+
+          {calculationError ? (
+            <p className="mt-4 text-sm text-[#F4B4B4]">{calculationError}</p>
+          ) : null}
 
           <p className="mx-auto mt-16 max-w-[460px] text-base leading-[1.38] text-[#BBC6E9] ">
             These results are intended as a guide only and should not replace
@@ -349,6 +517,10 @@ function ProteinCalculator() {
             <span className="text-sm">
               Gender: {gender === "female" ? "Female" : "Male"}
             </span>
+          </div>
+          <div className="mt-2 text-sm text-[#AFC0F4]">
+            Height: {displayHeightCm.toFixed(1)} cm /{" "}
+            {displayHeightIn.toFixed(1)} inch, Weight: {apiWeight} {unit}
           </div>
         </div>
       ) : null}

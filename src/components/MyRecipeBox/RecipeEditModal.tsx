@@ -1,21 +1,18 @@
 "use client";
+
+import {
+  useMyRecipeDetailsQuery,
+  useUpdateMyRecipeMutation,
+} from "@/redux/api/recipeApi";
 import { Editor } from "@tinymce/tinymce-react";
 import { X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-type RecipeEditDetails = {
-  duration: string;
-  energy: string;
-  features: string[];
-  needs: string[];
-  nutrition: string[];
-  howTo: string;
-  youtubeLink: string;
-};
+import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 type RecipeEditItem = {
-  id: number;
-  title: string;
-  details: RecipeEditDetails;
+  id: string;
+  recipeName: string;
+  recipeImage: string;
 };
 
 type RecipeEditModalProps = {
@@ -24,11 +21,13 @@ type RecipeEditModalProps = {
 };
 
 function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
-  if (!recipe) {
-    return null;
-  }
+  const recipeId = recipe?.id ?? "";
+  const { data: recipeDetailsResponse } = useMyRecipeDetailsQuery(recipeId, {
+    skip: !recipeId,
+  });
+  const recipeDetails = recipeDetailsResponse?.result;
+  const [updateMyRecipe, { isLoading }] = useUpdateMyRecipeMutation();
 
-  const details = recipe.details;
   const editorConfig = useMemo(
     () => ({
       plugins:
@@ -47,15 +46,105 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
     [],
   );
 
+  const [formData, setFormData] = useState({
+    recipeName: "",
+    duration: "",
+    energy: "",
+    features: "",
+    youtubeLink: "",
+  });
   const [needsContent, setNeedsContent] = useState<string>("");
   const [nutritionContent, setNutritionContent] = useState<string>("");
   const [howToContent, setHowToContent] = useState<string>("");
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [recipeImageFile, setRecipeImageFile] = useState<File | null>(null);
 
   useEffect(() => {
-    setNeedsContent(details.needs.join("<br />"));
-    setNutritionContent(details.nutrition.join("<br />"));
-    setHowToContent(details.howTo);
-  }, [recipe, details.howTo, details.needs, details.nutrition]);
+    if (!recipe) {
+      return;
+    }
+
+    setFormData({
+      recipeName: recipeDetails?.recipeName || recipe.recipeName || "",
+      duration: recipeDetails?.duration?.toString() || "",
+      energy: recipeDetails?.energy?.toString() || "",
+      features: recipeDetails?.features?.join(", ") || "",
+      youtubeLink: recipeDetails?.youtubeLink || "",
+    });
+    setNeedsContent(recipeDetails?.wyn || "");
+    setNutritionContent(recipeDetails?.nutrition || "");
+    setHowToContent(recipeDetails?.hymi || "");
+    setImagePreview(recipeDetails?.recipeImage || recipe.recipeImage || "");
+    setRecipeImageFile(null);
+  }, [recipe, recipeDetails]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview.startsWith("blob:")) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
+  if (!recipe) {
+    return null;
+  }
+
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!formData.recipeName.trim()) {
+      toast.error("Recipe name is required");
+      return;
+    }
+
+    if (!formData.duration.trim() || Number.isNaN(Number(formData.duration))) {
+      toast.error("Duration must be a valid number");
+      return;
+    }
+
+    if (!formData.energy.trim() || Number.isNaN(Number(formData.energy))) {
+      toast.error("Energy must be a valid number");
+      return;
+    }
+
+    try {
+      const features = formData.features
+        .split(",")
+        .map((feature) => feature.trim())
+        .filter(Boolean);
+
+      const bodyData = {
+        recipeId: recipe.id,
+        recipeName: formData.recipeName.trim(),
+        duration: Number(formData.duration.trim()),
+        energy: Number(formData.energy.trim()),
+        features,
+        wyn: needsContent,
+        nutrition: nutritionContent,
+        hymi: howToContent,
+        youtubeLink: formData.youtubeLink.trim(),
+        recipeImage: recipeImageFile ? undefined : imagePreview,
+      };
+
+      const payload = new FormData();
+      payload.append("bodyData", JSON.stringify(bodyData));
+
+      if (recipeImageFile) {
+        payload.append("recipeImage", recipeImageFile);
+      }
+
+      await updateMyRecipe(payload).unwrap();
+      toast.success("Recipe updated successfully");
+      onClose();
+    } catch (error) {
+      toast.error("Failed to update recipe");
+    }
+  };
 
   return (
     <div
@@ -82,31 +171,81 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
 
         <form
           className="max-h-[76vh] overflow-y-auto pr-1"
-          onSubmit={(event) => {
-            event.preventDefault();
-            onClose();
-          }}
+          onSubmit={handleSubmit}
         >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
             <EditInput
               label="Recipe Name"
               placeholder="Enter meal name"
-              defaultValue={recipe.title}
+              value={formData.recipeName}
+              onChange={(value) => handleInputChange("recipeName", value)}
             />
             <EditInput
               label="Duration"
               placeholder="Enter duration"
-              defaultValue={details.duration}
+              value={formData.duration}
+              onChange={(value) => handleInputChange("duration", value)}
             />
             <EditInput
               label="Energy (kcal)"
               placeholder="Enter Energy (kcal)"
-              defaultValue={details.energy}
+              value={formData.energy}
+              onChange={(value) => handleInputChange("energy", value)}
             />
             <EditInput
               label="Features"
               placeholder="Enter Features"
-              defaultValue={details.features.join(", ")}
+              value={formData.features}
+              onChange={(value) => handleInputChange("features", value)}
+            />
+          </div>
+
+          <div className="mt-4">
+            <label className="mb-2 block text-[20px] font-medium text-[#111111] md:text-[22px]">
+              Recipe image
+            </label>
+            <div className="mb-3">
+              {imagePreview ? (
+                <div className="overflow-hidden rounded-[24px] border border-[#C9D2E2] bg-[#FAFCFF]">
+                  <img
+                    src={imagePreview}
+                    alt="Selected recipe preview"
+                    className="h-[220px] w-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="flex h-[220px] w-full items-center justify-center rounded-[24px] border border-dashed border-[#C9D2E2] bg-[#FAFCFF] text-[16px] text-[#7B8794]">
+                  Image preview will appear here
+                </div>
+              )}
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(event) => {
+                const file = event.target.files?.[0] ?? null;
+
+                if (imagePreview.startsWith("blob:")) {
+                  URL.revokeObjectURL(imagePreview);
+                }
+
+                if (!file) {
+                  setRecipeImageFile(null);
+                  setImagePreview(
+                    recipeDetails?.recipeImage || recipe.recipeImage || "",
+                  );
+                  return;
+                }
+
+                if (!file.type.startsWith("image/")) {
+                  toast.error("Please select a valid image file");
+                  return;
+                }
+
+                setRecipeImageFile(file);
+                setImagePreview(URL.createObjectURL(file));
+              }}
+              className="h-[64px] w-full rounded-[26px] border border-[#C9D2E2] bg-[#FAFCFF] px-5 text-[16px] text-[#111111] outline-none file:mr-4 file:rounded-full file:border-0 file:bg-primary file:px-4 file:py-2 file:text-[14px] file:font-medium file:text-white hover:file:opacity-90 focus:border-[#8FA4CF] md:h-[70px] md:text-[18px]"
             />
           </div>
 
@@ -152,7 +291,10 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
             </label>
             <input
               type="text"
-              defaultValue={details.youtubeLink}
+              value={formData.youtubeLink}
+              onChange={(event) =>
+                handleInputChange("youtubeLink", event.target.value)
+              }
               placeholder="Enter Youtube link"
               className="h-[64px] w-full rounded-[26px] border border-[#C9D2E2] bg-[#FAFCFF] px-5 text-[20px] text-[#111111] outline-none placeholder:text-[#A4B2C7] focus:border-[#8FA4CF] md:h-[70px] md:text-[22px]"
             />
@@ -161,9 +303,10 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
           <div className="mt-8 flex justify-center md:justify-end">
             <button
               type="submit"
-              className="h-11 min-w-[130px] rounded-full bg-primary px-9 text-[16px] font-medium text-white"
+              disabled={isLoading}
+              className="h-11 min-w-[130px] rounded-full bg-primary px-9 text-[16px] font-medium text-white disabled:opacity-70"
             >
-              Submit
+              {isLoading ? "Updating..." : "Submit"}
             </button>
           </div>
         </form>
@@ -175,11 +318,13 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
 function EditInput({
   label,
   placeholder,
-  defaultValue,
+  value,
+  onChange,
 }: {
   label: string;
   placeholder: string;
-  defaultValue?: string;
+  value: string;
+  onChange: (value: string) => void;
 }) {
   return (
     <div>
@@ -188,7 +333,8 @@ function EditInput({
       </label>
       <input
         type="text"
-        defaultValue={defaultValue}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         className="h-[64px] w-full rounded-[26px] border border-[#C9D2E2] bg-[#FAFCFF] px-5 text-[20px] text-[#111111] outline-none placeholder:text-[#A4B2C7] focus:border-[#8FA4CF] md:h-[70px] md:text-[22px]"
       />
