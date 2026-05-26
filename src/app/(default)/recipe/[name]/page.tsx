@@ -4,18 +4,54 @@ import AddToMealPlanFlow from "@/components/Home/AddToMealPlanFlow";
 import RecipeVideoCard from "@/components/Home/RecipeVideoCard";
 import { BeautifulSpinner } from "@/components/ui/BeautifulSpinner";
 import {
-  useGetAllScrapedRecipesQuery,
-  useRecipeDetailsQuery,
+  useGetAllRecipesQuery,
+  useMyRecipeDetailsQuery,
 } from "@/redux/api/recipeApi";
+
 import { ArrowLeft, Bookmark } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
+type RecipeItem = {
+  id: string;
+  recipeName: string;
+  recipeImage: string;
+};
+
+type RecipeDetailsItem = {
+  id?: string;
+  title?: string;
+  recipeName?: string;
+  image?: string;
+  recipeImage?: string;
+  link?: string;
+  youtubeLink?: string;
+  description?: string;
+  wyn?: string;
+  category?: string;
+  features?: string[];
+  ingredients?: string[];
+  equipments?: string[];
+  instructions?: string[];
+  notes?: string[];
+  tips?: string[];
+  storage?: string[];
+  swaps?: string[];
+  nutrition?: string;
+};
+
 const buttonClass =
   "inline-flex h-11 items-center justify-center rounded-full border border-[#2A4FB8] px-6 text-base font-semibold text-[#143B9F] transition-colors hover:bg-[#EEF3FF]";
 
 const sectionTitleClass = "text-xl font-bold text-[#111111] sm:text-2xl";
+
+const toRecipeSlug = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
 const toSingleParam = (value: string | string[] | undefined) => {
   if (Array.isArray(value)) {
@@ -29,22 +65,31 @@ export default function RecipeDetailsPage() {
   const params = useParams<{ name?: string | string[] }>();
   const name = toSingleParam(params.name) ?? "";
 
+  const { data: recipesResponse } = useGetAllRecipesQuery({ page: 1 });
+
+  const recipes = (recipesResponse?.recipes || []) as RecipeItem[];
+
+  const matchedRecipe = recipes.find(
+    (item) => toRecipeSlug(item.recipeName) === toRecipeSlug(name),
+  );
+
+  const recipeId = matchedRecipe?.id || name;
+
   const {
     data: recipeResponse,
     isLoading: isRecipeLoading,
     error: recipeError,
-  } = useRecipeDetailsQuery(name, {
-    skip: !name,
+  } = useMyRecipeDetailsQuery(recipeId, {
+    skip: !recipeId,
   });
 
-  const { data: recipesResponse } = useGetAllScrapedRecipesQuery({ page: 1 });
-
-  const recipe = (recipeResponse as ApiResponse | undefined)?.data;
-  const relatedRecipes = (
-    (recipesResponse as { data?: { recipes?: ScrapedRecipe[] } } | undefined)
-      ?.data?.recipes || []
-  )
-    .filter((item) => item.link !== recipe?.link)
+  const recipe = (recipeResponse as RecipeDetailsItem | undefined) || null;
+  const recipeTitle = recipe?.title || recipe?.recipeName || "Recipe details";
+  const recipeImage = recipe?.image || recipe?.recipeImage || "";
+  const recipeVideo = recipe?.link || recipe?.youtubeLink || "";
+  const recipeDescription = recipe?.description || recipe?.wyn || "";
+  const relatedRecipes = recipes
+    .filter((item) => item.id !== recipeId)
     .slice(0, 4);
 
   if (isRecipeLoading) {
@@ -79,8 +124,8 @@ export default function RecipeDetailsPage() {
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(300px,0.9fr)_minmax(420px,1.1fr)] lg:gap-8">
           <div className="relative aspect-[4/5] overflow-hidden rounded-[28px] bg-white shadow-[0_18px_50px_rgba(17,24,39,0.08)] sm:rounded-[34px] lg:aspect-[7/10]">
             <Image
-              src={recipe.image}
-              alt={recipe.title}
+              src={recipeImage}
+              alt={recipeTitle}
               fill
               sizes="(max-width: 1024px) 100vw, 40vw"
               className="object-contain"
@@ -97,12 +142,12 @@ export default function RecipeDetailsPage() {
                 {recipe.category || "Featured meal"}
               </p>
               <h2 className="text-[24px] font-semibold leading-tight text-[#0F3695]">
-                {recipe.title}
+                {recipeTitle}
               </h2>
             </div>
 
             <p className="text-base font-medium  sm:text-lg text-[#0F3695]">
-              {recipe.description}
+              {recipeDescription}
             </p>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -158,8 +203,8 @@ export default function RecipeDetailsPage() {
 
             <div className="hidden gap-3 sm:grid sm:grid-cols-2">
               <AddToMealPlanFlow
-                title={recipe.title}
-                image={recipe.image}
+                title={recipeTitle}
+                image={recipeImage}
                 buttonClassName={`${buttonClass} bg-[#11389D] text-white hover:bg-[#0B2F8B] hover:text-black duration-300 ease-in `}
               />
               <button type="button" className={`${buttonClass} bg-white`}>
@@ -171,8 +216,8 @@ export default function RecipeDetailsPage() {
 
         <div className="mt-6 grid gap-3 sm:hidden">
           <AddToMealPlanFlow
-            title={recipe.title}
-            image={recipe.image}
+            title={recipeTitle}
+            image={recipeImage}
             buttonClassName={`${buttonClass} w-full bg-[#11389D] text-white hover:bg-[#0B2F8B]`}
           />
           <button type="button" className={`${buttonClass} w-full bg-white`}>
@@ -251,9 +296,9 @@ export default function RecipeDetailsPage() {
 
           <div className="space-y-4">
             <RecipeVideoCard
-              title={recipe.title}
-              thumbnail={recipe.image}
-              videoUrl={recipe.link}
+              title={recipeTitle}
+              thumbnail={recipeImage}
+              videoUrl={recipeVideo}
             />
           </div>
         </div>
@@ -268,16 +313,17 @@ export default function RecipeDetailsPage() {
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
               {relatedRecipes.map((item) => {
-                const recipeName = item.link.substring(
-                  item.link.lastIndexOf("/") + 1,
-                );
+                const recipeName = toRecipeSlug(item.recipeName);
 
                 return (
-                  <Link key={item.link} href={`/recipe/${recipeName}`}>
+                  <Link
+                    key={item.id}
+                    href={`/recipe/${encodeURIComponent(recipeName)}`}
+                  >
                     <div className="group relative aspect-[3/4] overflow-hidden rounded-[24px] border border-[#3557BF] bg-white transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(17,56,157,0.12)]">
                       <Image
-                        src={item.image}
-                        alt={item.title}
+                        src={item.recipeImage}
+                        alt={item.recipeName}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -288,7 +334,7 @@ export default function RecipeDetailsPage() {
                     </div>
                     <div className="px-3 py-4 text-center">
                       <p className="line-clamp-2 text-xl font-medium leading-6 text-[#143B9F]">
-                        {item.title}
+                        {item.recipeName}
                       </p>
                     </div>
                   </Link>

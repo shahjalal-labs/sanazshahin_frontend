@@ -1,13 +1,3 @@
-interface Recipe {
-  id: number;
-  name: string;
-  title: string;
-  image: string;
-  link: string;
-  category: string;
-  features: string[];
-}
-
 interface RecipeDetails {
   title: string;
   image: string;
@@ -60,6 +50,7 @@ interface MyRecipe {
   id: string;
   recipeName: string;
   recipeImage: string;
+  isBookmarked?: boolean;
 }
 
 interface MyRecipeDetailsResponse {

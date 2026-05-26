@@ -48,23 +48,27 @@ const recipeApi = baseApi.injectEndpoints({
       query: ({ page, limit }) => ({
         url: `/recipe/all`,
         method: "GET",
+        params: { page, limit },
       }),
+
       providesTags: ["Recipe"],
     }),
 
-    getAllScrapedRecipes: builder.query({
-      query: ({ page = 1 }) => ({
-        url: `/recipe/scraped-recipes?page=${page}`,
-        method: "GET",
+    toggleRecipeBookmark: builder.mutation({
+      query: (recipeId) => ({
+        url: `/recipe/toggle-bookmark/${recipeId}`,
+        method: "POST",
       }),
-      providesTags: ["Recipe"],
+      invalidatesTags: ["Recipe"],
     }),
 
-    recipeDetails: builder.query({
-      query: (name) => ({
-        url: `/recipe/scraped-recipes/details/${name}`,
+    getRecipeBookmarks: builder.query<unknown, void>({
+      query: () => ({
+        url: `/recipe/user-bookmarks`,
         method: "GET",
       }),
+      transformResponse: (response: { result?: unknown }) =>
+        response?.result ?? response,
       providesTags: ["Recipe"],
     }),
   }),
@@ -77,6 +81,6 @@ export const {
   useMyRecipeDetailsQuery,
   useDeleteMyRecipeMutation,
   useGetAllRecipesQuery,
-  useGetAllScrapedRecipesQuery,
-  useRecipeDetailsQuery,
+  useToggleRecipeBookmarkMutation,
+  useGetRecipeBookmarksQuery,
 } = recipeApi;

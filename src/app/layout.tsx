@@ -3,7 +3,7 @@ import "./globals.css";
 // import logo from "@/assets/logo.svg"
 // import logo from "@/assets/Logo.png";
 
-import NextAuthProvider from "@/components/providers/NextAuthProvider";
+import { AuthSessionProvider } from "@/components/providers/AuthSessionProvider";
 import ReduxProvider from "@/redux/ReduxProvider";
 import { MobileNavProvider } from "@/shared/MobileNavContext";
 import { Toaster } from "sonner";
@@ -26,12 +26,12 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <ReduxProvider>
-          <NextAuthProvider>
+          <AuthSessionProvider>
             <MobileNavProvider>
               {/* <Header /> */}
               <div className="">{children}</div>
             </MobileNavProvider>
-          </NextAuthProvider>
+          </AuthSessionProvider>
         </ReduxProvider>
         <Toaster />
 

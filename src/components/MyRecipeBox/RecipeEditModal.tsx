@@ -6,13 +6,23 @@ import {
 } from "@/redux/api/recipeApi";
 import { Editor } from "@tinymce/tinymce-react";
 import { X } from "lucide-react";
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 type RecipeEditItem = {
   id: string;
   recipeName: string;
   recipeImage: string;
+};
+
+type RecipeFormData = {
+  recipeName: string;
+  duration: number;
+  energy: number;
+  features: string[];
+  equipments: string[];
+  ingredients: string[];
+  youtubeLink: string;
 };
 
 type RecipeEditModalProps = {
@@ -46,11 +56,13 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
     [],
   );
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RecipeFormData>({
     recipeName: "",
-    duration: "",
-    energy: "",
-    features: "",
+    duration: 0,
+    energy: 0,
+    features: [],
+    equipments: [],
+    ingredients: [],
     youtubeLink: "",
   });
   const [needsContent, setNeedsContent] = useState<string>("");
@@ -58,6 +70,8 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
   const [howToContent, setHowToContent] = useState<string>("");
   const [imagePreview, setImagePreview] = useState<string>("");
   const [recipeImageFile, setRecipeImageFile] = useState<File | null>(null);
+  const [youtubeError, setYoutubeError] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!recipe) {
@@ -66,9 +80,11 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
 
     setFormData({
       recipeName: recipeDetails?.recipeName || recipe.recipeName || "",
-      duration: recipeDetails?.duration?.toString() || "",
-      energy: recipeDetails?.energy?.toString() || "",
-      features: recipeDetails?.features?.join(", ") || "",
+      duration: recipeDetails?.duration ?? 0,
+      energy: recipeDetails?.energy ?? 0,
+      features: recipeDetails?.features || [],
+      equipments: recipeDetails?.equipments || [],
+      ingredients: recipeDetails?.ingredients || [],
       youtubeLink: recipeDetails?.youtubeLink || "",
     });
     setNeedsContent(recipeDetails?.wyn || "");
@@ -76,6 +92,7 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
     setHowToContent(recipeDetails?.hymi || "");
     setImagePreview(recipeDetails?.recipeImage || recipe.recipeImage || "");
     setRecipeImageFile(null);
+    setYoutubeError("");
   }, [recipe, recipeDetails]);
 
   useEffect(() => {
@@ -90,8 +107,28 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
     return null;
   }
 
-  const handleInputChange = (field: keyof typeof formData, value: string) => {
+  const handleInputChange = (
+    field: keyof RecipeFormData,
+    value: string | number | string[],
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const validateYoutube = (value: string) => {
+    const v = value.trim();
+    if (!v) {
+      setYoutubeError("Youtube link is required");
+      return false;
+    }
+
+    try {
+      new URL(v);
+      setYoutubeError("");
+      return true;
+    } catch (error) {
+      setYoutubeError("Youtube link must be a valid URL");
+      return false;
+    }
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -102,28 +139,37 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
       return;
     }
 
-    if (!formData.duration.trim() || Number.isNaN(Number(formData.duration))) {
+    if (!Number.isFinite(Number(formData.duration))) {
       toast.error("Duration must be a valid number");
       return;
     }
 
-    if (!formData.energy.trim() || Number.isNaN(Number(formData.energy))) {
+    if (!Number.isFinite(Number(formData.energy))) {
       toast.error("Energy must be a valid number");
       return;
     }
 
+    if (!formData.youtubeLink.trim()) {
+      toast.error("Youtube link is required");
+      return;
+    }
+
+    if (!validateYoutube(formData.youtubeLink)) {
+      return;
+    }
+
     try {
-      const features = formData.features
-        .split(",")
-        .map((feature) => feature.trim())
-        .filter(Boolean);
+      const duration = Number(formData.duration);
+      const energy = Number(formData.energy);
 
       const bodyData = {
         recipeId: recipe.id,
         recipeName: formData.recipeName.trim(),
-        duration: Number(formData.duration.trim()),
-        energy: Number(formData.energy.trim()),
-        features,
+        duration,
+        energy,
+        features: formData.features,
+        equipments: formData.equipments,
+        ingredients: formData.ingredients,
         wyn: needsContent,
         nutrition: nutritionContent,
         hymi: howToContent,
@@ -184,19 +230,33 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
               label="Duration"
               placeholder="Enter duration"
               value={formData.duration}
+              inputType="number"
               onChange={(value) => handleInputChange("duration", value)}
             />
             <EditInput
               label="Energy (kcal)"
               placeholder="Enter Energy (kcal)"
               value={formData.energy}
-              onChange={(value) => handleInputChange("energy", value)}
+              inputType="number"
+              onChange={(value) => handleInputChange("energy", Number(value))}
             />
-            <EditInput
+            <TagInput
               label="Features"
-              placeholder="Enter Features"
-              value={formData.features}
-              onChange={(value) => handleInputChange("features", value)}
+              placeholder="Type a feature and press Enter"
+              tags={formData.features}
+              onChange={(tags) => handleInputChange("features", tags)}
+            />
+            <TagInput
+              label="Equipments"
+              placeholder="Type equipment and press Enter"
+              tags={formData.equipments}
+              onChange={(tags) => handleInputChange("equipments", tags)}
+            />
+            <TagInput
+              label="Ingredients"
+              placeholder="Type ingredient and press Enter"
+              tags={formData.ingredients}
+              onChange={(tags) => handleInputChange("ingredients", tags)}
             />
           </div>
 
@@ -206,20 +266,27 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
             </label>
             <div className="mb-3">
               {imagePreview ? (
-                <div className="overflow-hidden rounded-[24px] border border-[#C9D2E2] bg-[#FAFCFF]">
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="cursor-pointer overflow-hidden rounded-[24px] border border-[#C9D2E2] bg-[#FAFCFF]"
+                >
                   <img
                     src={imagePreview}
                     alt="Selected recipe preview"
-                    className="h-[220px] w-full object-cover"
+                    className="h-[220px] w-full object-contain"
                   />
                 </div>
               ) : (
-                <div className="flex h-[220px] w-full items-center justify-center rounded-[24px] border border-dashed border-[#C9D2E2] bg-[#FAFCFF] text-[16px] text-[#7B8794]">
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="cursor-pointer flex h-[220px] w-full items-center justify-center rounded-[24px] border border-dashed border-[#C9D2E2] bg-[#FAFCFF] text-[16px] text-[#7B8794]"
+                >
                   Image preview will appear here
                 </div>
               )}
             </div>
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               onChange={(event) => {
@@ -245,12 +312,12 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
                 setRecipeImageFile(file);
                 setImagePreview(URL.createObjectURL(file));
               }}
-              className="h-[64px] w-full rounded-[26px] border border-[#C9D2E2] bg-[#FAFCFF] px-5 text-[16px] text-[#111111] outline-none file:mr-4 file:rounded-full file:border-0 file:bg-primary file:px-4 file:py-2 file:text-[14px] file:font-medium file:text-white hover:file:opacity-90 focus:border-[#8FA4CF] md:h-[70px] md:text-[18px]"
+              className="hidden"
             />
           </div>
 
-          <div className="space-y-2 mt-4">
-            <label className="block font-medium text-[#374151] text-[20px]">
+          <div className="mt-4">
+            <label className="mb-2 block text-[20px] font-medium text-[#111111] md:text-[22px]">
               What You’ll Need
             </label>
             <Editor
@@ -261,8 +328,8 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
             />
           </div>
 
-          <div className="space-y-2 mt-4">
-            <label className="block font-medium text-[#374151] text-[20px]">
+          <div className="mt-4">
+            <label className="mb-2 block text-[20px] font-medium text-[#111111] md:text-[22px]">
               Nutrition
             </label>
             <Editor
@@ -273,8 +340,8 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
             />
           </div>
 
-          <div className="space-y-2 mt-4">
-            <label className="block font-medium text-[#374151] text-[20px]">
+          <div className="mt-4">
+            <label className="mb-2 block text-[20px] font-medium text-[#111111] md:text-[22px]">
               How You'll Make It
             </label>
             <Editor
@@ -290,17 +357,30 @@ function RecipeEditModal({ recipe, onClose }: RecipeEditModalProps) {
               Youtube link
             </label>
             <input
-              type="text"
+              type="url"
               value={formData.youtubeLink}
-              onChange={(event) =>
-                handleInputChange("youtubeLink", event.target.value)
-              }
+              onChange={(event) => {
+                const value = event.target.value;
+                handleInputChange("youtubeLink", value);
+
+                if (youtubeError) {
+                  validateYoutube(value);
+                }
+              }}
+              onBlur={() => validateYoutube(formData.youtubeLink)}
               placeholder="Enter Youtube link"
-              className="h-[64px] w-full rounded-[26px] border border-[#C9D2E2] bg-[#FAFCFF] px-5 text-[20px] text-[#111111] outline-none placeholder:text-[#A4B2C7] focus:border-[#8FA4CF] md:h-[70px] md:text-[22px]"
+              className={`h-[64px] w-full rounded-[26px] bg-[#FAFCFF] px-5 text-[20px] text-[#111111] outline-none placeholder:text-[#A4B2C7] md:h-[70px] md:text-[22px] ${
+                youtubeError
+                  ? "border-red-500 focus:border-red-500"
+                  : "border border-[#C9D2E2] focus:border-[#8FA4CF]"
+              }`}
             />
+            {youtubeError && (
+              <p className="mt-2 text-sm text-red-600">{youtubeError}</p>
+            )}
           </div>
 
-          <div className="mt-8 flex justify-center md:justify-end">
+          <div className="mt-8 flex justify-end">
             <button
               type="submit"
               disabled={isLoading}
@@ -319,11 +399,13 @@ function EditInput({
   label,
   placeholder,
   value,
+  inputType = "text",
   onChange,
 }: {
   label: string;
   placeholder: string;
-  value: string;
+  value: string | number;
+  inputType?: "text" | "number";
   onChange: (value: string) => void;
 }) {
   return (
@@ -332,12 +414,88 @@ function EditInput({
         {label}
       </label>
       <input
-        type="text"
+        type={inputType}
+        inputMode={inputType === "number" ? "numeric" : undefined}
+        min={inputType === "number" ? 0 : undefined}
+        step={inputType === "number" ? 1 : undefined}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         className="h-[64px] w-full rounded-[26px] border border-[#C9D2E2] bg-[#FAFCFF] px-5 text-[20px] text-[#111111] outline-none placeholder:text-[#A4B2C7] focus:border-[#8FA4CF] md:h-[70px] md:text-[22px]"
       />
+    </div>
+  );
+}
+
+function TagInput({
+  label,
+  placeholder,
+  tags,
+  onChange,
+}: {
+  label: string;
+  placeholder?: string;
+  tags: string[];
+  onChange: (tags: string[]) => void;
+}) {
+  const [inputValue, setInputValue] = useState("");
+
+  const addTag = (value: string) => {
+    const v = value.trim();
+    if (!v) return;
+
+    if (tags.includes(v)) {
+      setInputValue("");
+      return;
+    }
+
+    onChange([...tags, v]);
+    setInputValue("");
+  };
+
+  const removeTag = (tag: string) => {
+    onChange(tags.filter((item) => item !== tag));
+  };
+
+  return (
+    <div>
+      <label className="mb-2 block text-[20px] font-medium text-[#111111] md:text-[22px]">
+        {label}
+      </label>
+
+      <div className="flex w-full flex-wrap items-center gap-2 rounded-[12px] border border-[#C9D2E2] bg-[#FAFCFF] px-3 py-2">
+        {tags.map((tag) => (
+          <span
+            key={tag}
+            className="inline-flex items-center gap-2 rounded-full bg-[#EEF2FF] px-3 py-1 text-sm text-[#11389D]"
+          >
+            <span>{tag}</span>
+            <button
+              type="button"
+              onClick={() => removeTag(tag)}
+              className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#DDE8FF] text-[#11389D]"
+              aria-label={`Remove ${tag}`}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+
+        <input
+          type="text"
+          placeholder={placeholder}
+          value={inputValue}
+          onChange={(event) => setInputValue(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              addTag(inputValue);
+            }
+          }}
+          onBlur={() => addTag(inputValue)}
+          className="h-[40px] min-w-[160px] flex-1 bg-transparent px-2 text-sm text-[#111111] outline-none placeholder:text-[#A4B2C7]"
+        />
+      </div>
     </div>
   );
 }

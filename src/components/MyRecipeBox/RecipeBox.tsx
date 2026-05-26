@@ -403,7 +403,9 @@ function DetailRow({
       <p className="text-[15px] font-medium text-[#8A919F] md:text-[16px]">
         {label}
       </p>
-      <div className="md:text-right">{children}</div>
+      <div className="flex w-full justify-start md:justify-end md:text-right">
+        {children}
+      </div>
     </div>
   );
 }
