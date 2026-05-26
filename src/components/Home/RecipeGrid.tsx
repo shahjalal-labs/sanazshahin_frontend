@@ -1,6 +1,9 @@
 "use client";
 
-import { useGetAllRecipesQuery } from "@/redux/api/recipeApi";
+import {
+  useGetAllRecipesQuery,
+  useToggleRecipeBookmarkMutation,
+} from "@/redux/api/recipeApi";
 import { Bookmark, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -44,6 +47,8 @@ export default function RecipeGrid() {
     limit: 9,
   });
 
+  const [toggleBookmark] = useToggleRecipeBookmarkMutation();
+
   const recipeData = data as RecipeListResponse | undefined;
   const recipes = recipeData?.result?.recipes ?? [];
   const totalPages = recipeData?.result?.meta?.totalPages ?? 1;
@@ -55,6 +60,15 @@ export default function RecipeGrid() {
         ? prev.filter((r) => r !== recipeId)
         : [...prev, recipeId],
     );
+  };
+
+  const handleToggleBookmark = async (recipeId: string) => {
+    try {
+      await toggleBookmark(recipeId).unwrap();
+      toggleSave(recipeId);
+    } catch (err) {
+      console.error("Error toggling bookmark:", err);
+    }
   };
 
   const handlePrev = () => {
@@ -174,14 +188,14 @@ export default function RecipeGrid() {
                   key={recipe.id}
                   className="cursor-pointer"
                   onClick={() =>
-                    router.push(`/recipe/${encodeURIComponent(recipeSlug)}`)
+                    router.push(`/recipe/${encodeURIComponent(recipe.id)}`)
                   }
                   role="link"
                   tabIndex={0}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
-                      router.push(`/recipe/${encodeURIComponent(recipeSlug)}`);
+                      router.push(`/recipe/${encodeURIComponent(recipe.id)}`);
                     }
                   }}
                 >
@@ -197,7 +211,7 @@ export default function RecipeGrid() {
                     <button
                       onClick={(event) => {
                         event.stopPropagation();
-                        toggleSave(recipe.id);
+                        handleToggleBookmark(recipe.id);
                       }}
                       className="absolute right-3 top-3 z-10 text-white/95 transition-opacity hover:opacity-80"
                       aria-label={isSaved ? "Unsave recipe" : "Save recipe"}

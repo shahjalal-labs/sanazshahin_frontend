@@ -5,6 +5,7 @@ import RecipeVideoCard from "@/components/Home/RecipeVideoCard";
 import { BeautifulSpinner } from "@/components/ui/BeautifulSpinner";
 import {
   useGetAllRecipesQuery,
+  useGetRecipeBookmarksQuery,
   useMyRecipeDetailsQuery,
 } from "@/redux/api/recipeApi";
 
@@ -23,57 +24,48 @@ type RecipeDetailsItem = {
   id?: string;
   title?: string;
   recipeName?: string;
-  image?: string;
-  recipeImage?: string;
-  link?: string;
-  youtubeLink?: string;
-  description?: string;
-  wyn?: string;
-  category?: string;
+  isBookmarked?: boolean;
+  duration?: number;
+  energy?: number;
   features?: string[];
-  ingredients?: string[];
   equipments?: string[];
+  ingredients?: string[];
   instructions?: string[];
-  notes?: string[];
-  tips?: string[];
-  storage?: string[];
-  swaps?: string[];
+  wyn?: string;
+  description?: string;
   nutrition?: string;
+  hymi?: string;
+  recipeImage?: string;
+  image?: string;
+  youtubeLink?: string;
+  link?: string;
+  category?: string;
 };
+
+type RecipeDetailsResponse = {
+  result?: RecipeDetailsItem;
+} & RecipeDetailsItem;
 
 const buttonClass =
   "inline-flex h-11 items-center justify-center rounded-full border border-[#2A4FB8] px-6 text-base font-semibold text-[#143B9F] transition-colors hover:bg-[#EEF3FF]";
 
 const sectionTitleClass = "text-xl font-bold text-[#111111] sm:text-2xl";
 
-const toRecipeSlug = (value: string) =>
-  value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
-const toSingleParam = (value: string | string[] | undefined) => {
-  if (Array.isArray(value)) {
-    return value[0];
-  }
-
-  return value;
-};
-
 export default function RecipeDetailsPage() {
-  const params = useParams<{ name?: string | string[] }>();
-  const name = toSingleParam(params.name) ?? "";
+  const params = useParams();
+  const recipeId = params.id
+    ? Array.isArray(params.id)
+      ? params.id[0]
+      : params.id
+    : "";
 
+  // Fetching the first page of recipes only for showing related items.
   const { data: recipesResponse } = useGetAllRecipesQuery({ page: 1 });
+  const { data: bookmarksResponse } = useGetRecipeBookmarksQuery();
 
-  const recipes = (recipesResponse?.recipes || []) as RecipeItem[];
-
-  const matchedRecipe = recipes.find(
-    (item) => toRecipeSlug(item.recipeName) === toRecipeSlug(name),
-  );
-
-  const recipeId = matchedRecipe?.id || name;
+  const recipes = (recipesResponse?.result?.recipes ||
+    recipesResponse?.recipes ||
+    []) as RecipeItem[];
 
   const {
     data: recipeResponse,
@@ -83,11 +75,25 @@ export default function RecipeDetailsPage() {
     skip: !recipeId,
   });
 
-  const recipe = (recipeResponse as RecipeDetailsItem | undefined) || null;
+  const recipeData = recipeResponse as RecipeDetailsResponse | undefined;
+  const recipe = recipeData?.result ?? recipeData ?? null;
+  const bookmarkedRecipes = Array.isArray(bookmarksResponse)
+    ? bookmarksResponse
+    : Array.isArray((bookmarksResponse as { result?: unknown })?.result)
+      ? ((bookmarksResponse as { result: unknown[] }).result ?? [])
+      : [];
+  const isBookmarked =
+    recipe?.isBookmarked ||
+    bookmarkedRecipes.some((item) => {
+      const bookmarkRecipe = item as { recipe?: { id?: string } };
+      return bookmarkRecipe.recipe?.id === recipeId;
+    });
   const recipeTitle = recipe?.title || recipe?.recipeName || "Recipe details";
   const recipeImage = recipe?.image || recipe?.recipeImage || "";
   const recipeVideo = recipe?.link || recipe?.youtubeLink || "";
   const recipeDescription = recipe?.description || recipe?.wyn || "";
+  const recipeIntro = recipe?.wyn || "";
+  const recipeNote = recipe?.hymi || "";
   const relatedRecipes = recipes
     .filter((item) => item.id !== recipeId)
     .slice(0, 4);
@@ -131,8 +137,19 @@ export default function RecipeDetailsPage() {
               className="object-contain"
               priority
             />
-            <div className="absolute right-4 top-4 rounded-full bg-black/20 p-2 text-white backdrop-blur-sm">
-              <Bookmark className="h-5 w-5" />
+            <div
+              className={`absolute right-4 top-4 rounded-full p-2 backdrop-blur-sm transition-colors ${
+                isBookmarked
+                  ? "bg-black/20 text-white shadow-lg"
+                  : "bg-black/20 text-white"
+              }`}
+            >
+              <Bookmark
+                className="h-5 w-5"
+                fill={isBookmarked ? "currentColor" : "none"}
+                stroke="currentColor"
+                strokeWidth={2.2}
+              />
             </div>
           </div>
 
@@ -149,6 +166,21 @@ export default function RecipeDetailsPage() {
             <p className="text-base font-medium  sm:text-lg text-[#0F3695]">
               {recipeDescription}
             </p>
+
+            {(recipe.duration != null || recipe.energy != null) && (
+              <div className="flex flex-wrap gap-3 text-sm font-semibold text-[#143B9F]">
+                {recipe.duration != null ? (
+                  <span className="rounded-full bg-[#EEF3FF] px-4 py-2">
+                    Duration: {recipe.duration} mins
+                  </span>
+                ) : null}
+                {recipe.energy != null ? (
+                  <span className="rounded-full bg-[#EEF3FF] px-4 py-2">
+                    Energy: {recipe.energy} kcal
+                  </span>
+                ) : null}
+              </div>
+            )}
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {(recipe?.features?.slice(0, 3) || []).map((feature) => (
@@ -195,6 +227,11 @@ export default function RecipeDetailsPage() {
               <p className="text-sm font-medium leading-6 text-[#2A2A2A] sm:text-base">
                 {recipe.nutrition || "Nutrition information is not available."}
               </p>
+              {recipeNote ? (
+                <p className="mt-3 text-sm leading-6 text-[#0F3695]">
+                  {recipeNote}
+                </p>
+              ) : null}
               <p className="mt-3 text-sm leading-6 text-[#5D6473]">
                 *Nutrition info is an estimate and may vary with cooking methods
                 and ingredients.
@@ -226,72 +263,20 @@ export default function RecipeDetailsPage() {
         </div>
 
         <div className="mt-8 grid gap-6 lg:mt-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(420px,1.15fr)] lg:items-start">
-          <div>
+          <div className="space-y-3 text-lg">
             <h3 className={`${sectionTitleClass} mb-4`}>Instructions:</h3>
-            <ol className="space-y-4">
-              {(recipe.instructions || []).map((step, index) => (
-                <li
-                  key={`${index}-${step}`}
-                  className="text-sm leading-7 text-[#374151] sm:text-base"
-                >
-                  <span className="font-semibold text-[#0F3695]">
-                    {index + 1}. Step
-                  </span>
-                  <span className="block">{step}</span>
-                </li>
-              ))}
-            </ol>
 
-            {recipe.notes?.length ||
-            recipe.tips?.length ||
-            recipe.storage?.length ||
-            recipe.swaps?.length ? (
-              <div className="mt-6 space-y-6 text-sm leading-7 text-[#5D6473] sm:text-base">
-                {recipe.notes?.length ? (
-                  <div>
-                    <p className="font-semibold text-[#111111]">Notes:</p>
-                    <ul className="mt-2 space-y-2">
-                      {recipe.notes.map((item) => (
-                        <li key={item}>• {item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
+            <div className="space-y-3 ">
+              <h4 className="font-semibold text-[#0F3695]">What You'll Need</h4>
+              <p className="text-[#374151]">{recipe.wyn}</p>
+            </div>
 
-                {recipe.tips?.length ? (
-                  <div>
-                    <p className="font-semibold text-[#111111]">Tips:</p>
-                    <ul className="mt-2 space-y-2">
-                      {recipe.tips.map((item) => (
-                        <li key={item}>• {item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-
-                {recipe.storage?.length ? (
-                  <div>
-                    <p className="font-semibold text-[#111111]">Storage:</p>
-                    <ul className="mt-2 space-y-2">
-                      {recipe.storage.map((item) => (
-                        <li key={item}>• {item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-
-                {recipe.swaps?.length ? (
-                  <div>
-                    <p className="font-semibold text-[#111111]">Swaps:</p>
-                    <ul className="mt-2 space-y-2">
-                      {recipe.swaps.map((item) => (
-                        <li key={item}>• {item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
+            <div className="space-y-3 ">
+              <h4 className="font-semibold text-[#0F3695]">
+                How You'll Make It
+              </h4>
+              <p className="text-[#374151]">{recipe.hymi}</p>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -313,12 +298,10 @@ export default function RecipeDetailsPage() {
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
               {relatedRecipes.map((item) => {
-                const recipeName = toRecipeSlug(item.recipeName);
-
                 return (
                   <Link
                     key={item.id}
-                    href={`/recipe/${encodeURIComponent(recipeName)}`}
+                    href={`/recipe/${encodeURIComponent(item.id)}`}
                   >
                     <div className="group relative aspect-[3/4] overflow-hidden rounded-[24px] border border-[#3557BF] bg-white transition-transform duration-200 hover:-translate-y-1 hover:shadow-[0_16px_30px_rgba(17,56,157,0.12)]">
                       <Image
