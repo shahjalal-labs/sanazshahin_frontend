@@ -3,6 +3,7 @@
 import { useGetRecipeBookmarksQuery } from "@/redux/api/recipeApi";
 import { Bookmark } from "lucide-react";
 import Image from "next/image";
+import { BeautifulSpinner } from "../ui/BeautifulSpinner";
 
 function SaveList() {
   const {
@@ -37,10 +38,8 @@ function SaveList() {
   if (isLoading) {
     return (
       <section className="w-full pt-[104px]">
-        <div className="mx-auto w-full max-w-[1180px] px-4 sm:px-6">
-          <div className="flex h-[300px] items-center justify-center text-[#1B1B1B]">
-            Loading bookmarks...
-          </div>
+        <div className="flex h-screen items-center justify-center">
+          <BeautifulSpinner />
         </div>
       </section>
     );
