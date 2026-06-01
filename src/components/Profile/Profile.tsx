@@ -7,6 +7,7 @@ import {
   useUpdateProfileMutation,
 } from "@/redux/api/userApi";
 import Cookies from "js-cookie";
+import { signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -120,6 +121,15 @@ export default function Profile() {
         confirmButton: "sanaz-swal-confirm",
         cancelButton: "sanaz-swal-cancel",
         icon: "sanaz-swal-icon",
+      },
+      preConfirm: async () => {
+        Cookies.remove("accessToken");
+        Cookies.remove("token");
+        Cookies.remove("forgetToken");
+        await signOut();
+
+        toast.success("Logged out successfully");
+        router.push("/login");
       },
     });
   };

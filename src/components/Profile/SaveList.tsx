@@ -3,7 +3,7 @@
 import { useGetRecipeBookmarksQuery } from "@/redux/api/recipeApi";
 import { Bookmark } from "lucide-react";
 import Image from "next/image";
-import { BeautifulSpinner } from "../ui/BeautifulSpinner";
+import RecipeCardSkeleton from "../ui/RecipeCardSkeleton";
 
 function SaveList() {
   const {
@@ -36,13 +36,7 @@ function SaveList() {
       ) ?? [];
 
   if (isLoading) {
-    return (
-      <section className="w-full pt-[104px]">
-        <div className="flex h-screen items-center justify-center">
-          <BeautifulSpinner />
-        </div>
-      </section>
-    );
+    return <RecipeCardSkeleton />;
   }
 
   if (error) {

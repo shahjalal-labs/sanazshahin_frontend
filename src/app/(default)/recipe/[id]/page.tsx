@@ -2,7 +2,7 @@
 
 import AddToMealPlanFlow from "@/components/Home/AddToMealPlanFlow";
 import RecipeVideoCard from "@/components/Home/RecipeVideoCard";
-import { BeautifulSpinner } from "@/components/ui/BeautifulSpinner";
+import RecipeDetailsSkeleton from "@/components/ui/RecipeDetailsSkeleton";
 import {
   useGetAllRecipesQuery,
   useGetRecipeBookmarksQuery,
@@ -90,7 +90,7 @@ export default function RecipeDetailsPage() {
     });
   const recipeTitle = recipe?.title || recipe?.recipeName || "Recipe details";
   const recipeImage = recipe?.image || recipe?.recipeImage || "";
-  const recipeVideo = recipe?.link || recipe?.youtubeLink || "";
+  const recipeVideo = recipe?.youtubeLink || recipe?.link || "";
   const recipeDescription = recipe?.description || recipe?.wyn || "";
   const recipeIntro = recipe?.wyn || "";
   const recipeNote = recipe?.hymi || "";
@@ -99,11 +99,7 @@ export default function RecipeDetailsPage() {
     .slice(0, 4);
 
   if (isRecipeLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <BeautifulSpinner />
-      </div>
-    );
+    return <RecipeDetailsSkeleton />;
   }
 
   if (recipeError || !recipe) {

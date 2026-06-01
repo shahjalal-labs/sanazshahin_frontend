@@ -8,7 +8,7 @@ import { Bookmark, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { BeautifulSpinner } from "../ui/BeautifulSpinner";
+import RecipeCardSkeleton from "../ui/RecipeCardSkeleton";
 
 type RecipeItem = {
   id: string;
@@ -111,11 +111,7 @@ export default function RecipeGrid() {
   ];
 
   if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <BeautifulSpinner />
-      </div>
-    );
+    return <RecipeCardSkeleton />;
   }
 
   if (error) {

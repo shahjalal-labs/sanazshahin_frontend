@@ -482,6 +482,7 @@ export default function ProteinCalculator() {
 
       {step === 5 ? (
         <div className="mx-auto w-full max-w-[900px] rounded-[32px] bg-[#061E68] px-4 py-8 text-center text-white sm:px-10 sm:py-12 md:px-14 md:py-14 mt-10">
+          {/* arrow btn  */}
           <h2 className="text-[24px] font-bold leading-tight ">
             Your Protein Calculation
           </h2>

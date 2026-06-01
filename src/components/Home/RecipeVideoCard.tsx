@@ -1,6 +1,5 @@
 "use client";
 
-import { useGetAllRecipesQuery } from "@/redux/api/recipeApi";
 import { Play } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
@@ -15,22 +14,32 @@ interface RecipeVideoCardProps {
 const getYouTubeEmbedUrl = (url: string) => {
   try {
     const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "");
 
-    if (parsed.hostname.includes("youtu.be")) {
-      const id = parsed.pathname.replace("/", "");
-      return id
-        ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`
-        : null;
-    }
+    const resolveVideoId = () => {
+      if (host === "youtu.be") {
+        return parsed.pathname.split("/").filter(Boolean)[0] ?? null;
+      }
 
-    if (parsed.hostname.includes("youtube.com")) {
-      const id = parsed.searchParams.get("v");
-      return id
-        ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`
-        : null;
-    }
+      if (host.endsWith("youtube.com")) {
+        if (parsed.pathname.startsWith("/watch")) {
+          return parsed.searchParams.get("v");
+        }
 
-    return null;
+        const match = parsed.pathname.match(
+          /^\/(?:embed|shorts|live)\/([^/?#]+)/,
+        );
+
+        return match?.[1] ?? parsed.searchParams.get("v");
+      }
+
+      return null;
+    };
+
+    const videoId = resolveVideoId();
+    return videoId
+      ? `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`
+      : null;
   } catch {
     return null;
   }
@@ -44,7 +53,6 @@ export default function RecipeVideoCard({
 }: RecipeVideoCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const embedUrl = useMemo(() => getYouTubeEmbedUrl(videoUrl), [videoUrl]);
-  const { data: recipes } = useGetAllRecipesQuery({});
 
   return (
     <div className={`overflow-hidden rounded-[30px] ${className ?? ""}`.trim()}>
