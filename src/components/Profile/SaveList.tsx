@@ -3,6 +3,7 @@
 import { useGetRecipeBookmarksQuery } from "@/redux/api/recipeApi";
 import { Bookmark } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import RecipeCardSkeleton from "../ui/RecipeCardSkeleton";
 
 function SaveList() {
@@ -80,31 +81,36 @@ function SaveList() {
         <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
           {recipes.map((recipe) => (
             <article key={recipe.id} className="text-center">
-              <div className="relative aspect-square overflow-hidden rounded-[22px] border border-[#3157BC] bg-slate-200">
-                <Image
-                  src={recipe.recipeImage}
-                  alt={recipe.recipeName}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 340px"
-                  className="object-cover"
-                />
-
-                <button
-                  type="button"
-                  className="absolute right-3 top-3 text-white/90 transition-opacity hover:opacity-75"
-                  aria-label="Save recipe"
-                >
-                  <Bookmark
-                    className="h-5 w-5"
-                    strokeWidth={2.2}
-                    fill="currentColor"
+              <Link
+                href={`/recipe/${encodeURIComponent(recipe.id)}`}
+                className="group block"
+                aria-label={`View details for ${recipe.recipeName}`}
+              >
+                <div className="relative aspect-square overflow-hidden rounded-[22px] border border-[#3157BC] bg-slate-200 transition-transform duration-200 group-hover:-translate-y-1 group-hover:shadow-[0_16px_30px_rgba(17,56,157,0.12)]">
+                  <Image
+                    src={recipe.recipeImage}
+                    alt={recipe.recipeName}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 340px"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                </button>
-              </div>
 
-              <h2 className="mt-3 whitespace-pre-line px-2 font-semibold leading-[1.3] text-[#123996] [font-size:clamp(18px,1.1vw,26px)]">
-                {recipe.recipeName}
-              </h2>
+                  <span
+                    className="absolute right-3 top-3 text-white/90"
+                    aria-hidden="true"
+                  >
+                    <Bookmark
+                      className="h-5 w-5"
+                      strokeWidth={2.2}
+                      fill="currentColor"
+                    />
+                  </span>
+                </div>
+
+                <h2 className="mt-3 whitespace-pre-line px-2 font-semibold leading-[1.3] text-[#123996] [font-size:clamp(18px,1.1vw,26px)]">
+                  {recipe.recipeName}
+                </h2>
+              </Link>
             </article>
           ))}
         </div>

@@ -6,8 +6,8 @@ import {
 } from "@/redux/api/recipeApi";
 import { Bookmark, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import RecipeCardSkeleton from "../ui/RecipeCardSkeleton";
 
 type RecipeItem = {
@@ -36,11 +36,13 @@ const toRecipeSlug = (value: string) =>
 
 export default function RecipeGrid() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
   const [savedRecipes, setSavedRecipes] = useState<string[]>([]);
   const [recipeType, setRecipeType] = useState("all");
   const [ingredient, setIngredient] = useState("all");
   const [feature, setFeature] = useState("all");
+  const searchQuery = searchParams.get("search")?.trim().toLowerCase() ?? "";
 
   const { data, isLoading, error } = useGetAllRecipesQuery({
     page: currentPage,
@@ -53,6 +55,16 @@ export default function RecipeGrid() {
   const recipes = recipeData?.result?.recipes ?? [];
   const totalPages = recipeData?.result?.meta?.totalPages ?? 1;
   const activePage = recipeData?.result?.meta?.currentPage ?? currentPage;
+  const visibleRecipes = useMemo(() => {
+    if (!searchQuery) {
+      return recipes;
+    }
+
+    return recipes.filter((recipe) => {
+      const recipeName = recipe.recipeName?.toLowerCase() ?? "";
+      return recipeName.includes(searchQuery);
+    });
+  }, [recipes, searchQuery]);
 
   const toggleSave = (recipeId: string) => {
     setSavedRecipes((prev) =>
@@ -122,15 +134,19 @@ export default function RecipeGrid() {
     );
   }
 
-  if (recipes.length === 0) {
+  if (visibleRecipes.length === 0) {
     return (
       <div className="w-full pt-[104px]">
         <div className="mx-auto container px-4 py-20 text-center">
           <h2 className="text-2xl font-semibold text-[#121212]">
-            No recipes found
+            {searchQuery
+              ? `No recipes found for "${searchQuery}"`
+              : "No recipes found"}
           </h2>
           <p className="mt-2 text-sm text-[#6B7280]">
-            Try a different filter or check back later.
+            {searchQuery
+              ? "Try a different search term or clear the search bar."
+              : "Try a different filter or check back later."}
           </p>
         </div>
       </div>
@@ -175,7 +191,7 @@ export default function RecipeGrid() {
       <div className="px-4 pb-8">
         <div className="container mx-auto ">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recipes.map((recipe) => {
+            {visibleRecipes.map((recipe) => {
               const recipeSlug = toRecipeSlug(recipe.recipeName || recipe.id);
               const isSaved =
                 recipe.isBookmarked || savedRecipes.includes(recipe.id);

@@ -145,6 +145,19 @@ export default function Header() {
     router.push("/notification");
   };
 
+  const handleSearch = () => {
+    const query = searchValue.trim();
+
+    if (!query) {
+      router.push("/");
+      setMobileSearchOpen(false);
+      return;
+    }
+
+    router.push(`/?search=${encodeURIComponent(query)}`);
+    setMobileSearchOpen(false);
+  };
+
   const handleLogout = async () => {
     Cookies.remove("accessToken");
     Cookies.remove("token");
@@ -174,10 +187,17 @@ export default function Header() {
                 type="text"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    handleSearch();
+                  }
+                }}
                 placeholder="Search for meal"
                 className="flex-1 px-5 py-4 text-sm text-gray-600 placeholder-gray-400 outline-none bg-transparent"
               />
               <button
+                type="button"
+                onClick={handleSearch}
                 className="bg-primary hover:bg-primary-dark transition-colors px-4 py-2.5 flex items-center justify-center text-white cursor-pointer rounded-xl mr-2"
                 aria-label="Search"
               >
@@ -296,11 +316,18 @@ export default function Header() {
                 type="text"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    handleSearch();
+                  }
+                }}
                 placeholder="Search for meal"
                 autoFocus
                 className="flex-1 px-4 py-2.5 text-sm text-gray-600 placeholder-gray-400 outline-none bg-transparent"
               />
               <button
+                type="button"
+                onClick={handleSearch}
                 className="bg-primary hover:bg-primary-dark transition-colors px-4 py-2.5 flex items-center justify-center text-white"
                 aria-label="Search"
               >
