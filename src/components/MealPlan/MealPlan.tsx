@@ -8,16 +8,14 @@ import m5 from "@/assets/meal/m5.jpg";
 import m6 from "@/assets/meal/m6.jpg";
 import m7 from "@/assets/meal/m7.png";
 import {
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  Coffee,
-  RefreshCw,
-  Soup,
-  UtensilsCrossed,
-} from "lucide-react";
+  useCreateMealRecipeMutation,
+  useGetAvailableRecipesQuery,
+  useGetUserMealPlansQuery,
+} from "@/redux/api/mealApi";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image, { StaticImageData } from "next/image";
-import { ComponentType, ReactNode, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { RxCross2 } from "react-icons/rx";
 
 type MealKey =
   | "kale-salad"
@@ -255,18 +253,51 @@ const truncateMealName = (name: string, maxChars = 10) => {
 function MealPlan() {
   const [currentMonth, setCurrentMonth] = useState(new Date(2026, 0, 1));
   const [selectedDate, setSelectedDate] = useState("2026-01-04");
-  const breakfastMealKeys: MealKey[] = ["kale-salad", "tortilla", "popcorn"];
-  const [selectedBreakfastMeal, setSelectedBreakfastMeal] =
-    useState<MealKey>("kale-salad");
 
-  const planEntries = useMemo(() => createInitialEntries(), []);
+  const { data: availableRecipesData } = useGetAvailableRecipesQuery({});
+  const { data: userMealPlansData, refetch: refetchUserMealPlans } =
+    useGetUserMealPlansQuery({});
+  const [createMealRecipe] = useCreateMealRecipeMutation();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDateForModal, setSelectedDateForModal] = useState<
+    string | null
+  >(null);
+
+  const availableRecipes = availableRecipesData?.result || [];
+  console.log(availableRecipes);
 
   const entryByDate = useMemo(() => {
-    return planEntries.reduce<Record<string, MealPlanEntry>>((acc, entry) => {
-      acc[entry.date] = entry;
+    const userMealPlans: any[] = Array.isArray(userMealPlansData?.result)
+      ? userMealPlansData.result
+      : Array.isArray(userMealPlansData?.data)
+        ? userMealPlansData.data
+        : Array.isArray(userMealPlansData)
+          ? userMealPlansData
+          : [];
+
+    return userMealPlans.reduce<Record<string, any>>((acc: any, plan: any) => {
+      const dateStr = (plan.selectedDate || plan.date)?.split("T")[0];
+      if (dateStr) {
+        acc[dateStr] = plan;
+      }
       return acc;
     }, {});
-  }, [planEntries]);
+  }, [userMealPlansData]);
+
+  const handleCreateMealRecipe = async (recipe: any) => {
+    if (!selectedDateForModal) return;
+    try {
+      await createMealRecipe({
+        recipeId: recipe._id || recipe.id,
+        selectedDate: new Date(selectedDateForModal).toISOString(),
+      }).unwrap();
+      setIsModalOpen(false);
+      refetchUserMealPlans();
+    } catch (error) {
+      console.error("Failed to create meal plan:", error);
+    }
+  };
 
   const calendarDays = useMemo(() => {
     const monthStart = new Date(
@@ -315,19 +346,6 @@ function MealPlan() {
   };
 
   const selectedEntry = entryByDate[selectedDate];
-  const selectedMeal = selectedEntry
-    ? mealCatalog[selectedEntry.mealKey]
-    : null;
-  const selectedNutritionStats = selectedMeal
-    ? [
-        { label: "Fiber", value: selectedMeal.nutrition.fiber },
-        { label: "Fat", value: selectedMeal.nutrition.fat },
-        { label: "Carb", value: selectedMeal.nutrition.carb },
-        { label: "Iron", value: selectedMeal.nutrition.iron },
-        { label: "Protein", value: selectedMeal.nutrition.protein },
-        { label: "Calorie", value: selectedMeal.nutrition.calorie },
-      ]
-    : [];
 
   return (
     <section className="mx-auto container w-full px-3 pb-12 sm:px-4">
@@ -373,16 +391,28 @@ function MealPlan() {
             {calendarDays.map((dayDate) => {
               const isoDate = formatISODate(dayDate);
               const planEntry = entryByDate[isoDate];
-              const meal = planEntry ? mealCatalog[planEntry.mealKey] : null;
               const isSelected = selectedDate === isoDate;
               const isOutsideCurrentMonth =
                 dayDate.getMonth() !== currentMonth.getMonth();
+
+              const recipeImage =
+                planEntry?.recipe?.recipeImage || planEntry?.recipeImage;
+              const recipeName =
+                planEntry?.recipe?.recipeName ||
+                planEntry?.recipeName ||
+                "Unnamed Recipe";
 
               return (
                 <button
                   key={isoDate}
                   type="button"
-                  onClick={() => setSelectedDate(isoDate)}
+                  onClick={() => {
+                    setSelectedDate(isoDate);
+                    if (!planEntry) {
+                      setSelectedDateForModal(isoDate);
+                      setIsModalOpen(true);
+                    }
+                  }}
                   className={`flex min-h-[195px] flex-col border-t border-b border-l border-[#EDEEF1] bg-white p-3 text-left transition shadow-md ${
                     isSelected
                       ? "relative z-[1] border border-[#0A2D9E] ring-2 ring-[#0A2D9E]/25"
@@ -399,27 +429,23 @@ function MealPlan() {
                     >
                       {dayDate.getDate().toString().padStart(2, "0")}
                     </span>
-
-                    {planEntry ? (
-                      <span className="rounded-full bg-[#EEF1F7] px-3 py-[2px] text-[14px] font-semibold text-[#6A7280]">
-                        Day {planEntry.dayNumber.toString().padStart(2, "0")}
-                      </span>
-                    ) : null}
                   </div>
 
-                  {meal ? (
+                  {planEntry ? (
                     <>
                       <div className="relative h-[102px] w-full overflow-hidden rounded-[14px] bg-[#F3F4F6]">
-                        <Image
-                          src={meal.image}
-                          alt={meal.title}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 220px, 180px"
-                        />
+                        {recipeImage ? (
+                          <Image
+                            src={recipeImage}
+                            alt={recipeName}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 220px, 180px"
+                          />
+                        ) : null}
                       </div>
                       <p className="mt-3 line-clamp-2 text-[15px] font-semibold leading-[1.25] text-[#3B3F45] sm:text-[16px]">
-                        {meal.title}
+                        {recipeName}
                       </p>
                     </>
                   ) : (
@@ -436,7 +462,7 @@ function MealPlan() {
         </div>
       </div>
 
-      {selectedEntry && selectedMeal ? (
+      {selectedEntry ? (
         <div className="mt-12 rounded-[12px]">
           <h2 className="text-xl font-semibold leading-none text-[#141414]">
             Meal Plan
@@ -449,206 +475,213 @@ function MealPlan() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                 <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-[#D7DCE5] bg-[#F2F4F8]">
-                  <Image
-                    src={selectedMeal.image}
-                    alt={selectedMeal.title}
-                    fill
-                    className="object-cover"
-                  />
+                  {selectedEntry.recipe?.recipeImage ||
+                  selectedEntry.recipeImage ? (
+                    <Image
+                      src={
+                        selectedEntry.recipe?.recipeImage ||
+                        selectedEntry.recipeImage
+                      }
+                      alt={
+                        selectedEntry.recipe?.recipeName ||
+                        selectedEntry.recipeName ||
+                        "Recipe"
+                      }
+                      fill
+                      className="object-cover"
+                    />
+                  ) : null}
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-lg font-semibold text-[#202329] sm:text-xl">
-                    {selectedMeal.title}
-                  </p>
-                  <p className="text-sm font-medium text-[#79808E] sm:text-base">
-                    Day {selectedEntry.dayNumber.toString().padStart(2, "0")}{" "}
-                    meal
+                    {selectedEntry.recipe?.recipeName ||
+                      selectedEntry.recipeName ||
+                      "Unnamed Recipe"}
                   </p>
                 </div>
               </div>
-
-              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[#D7DCE5] bg-[#F8FAFC] px-3 py-1.5 text-sm font-semibold text-[#4D525D]">
-                <CalendarDays className="h-4 w-4" />
-                <span>{selectedMeal.nutrition.duration}</span>
-              </div>
-            </div>
-
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-              {selectedNutritionStats.map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-xl border border-[#E5E9F0] bg-[#F8FAFC] px-3 py-3"
-                >
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#8A92A2]">
-                    {item.label}
-                  </p>
-                  <p className="mt-1 text-lg font-bold leading-none text-[#1F2430] sm:text-xl">
-                    {item.value}
-                  </p>
-                </div>
-              ))}
             </div>
           </div>
-
-          <MealCategoryBlock title="Breakfast" icon={Coffee}>
-            {breakfastMealKeys.map((mealKey) => (
-              <MealListRow
-                key={mealKey}
-                meal={mealCatalog[mealKey]}
-                checked={selectedBreakfastMeal === mealKey}
-                highlighted={selectedBreakfastMeal === mealKey}
-                onSelect={() => setSelectedBreakfastMeal(mealKey)}
-              />
-            ))}
-          </MealCategoryBlock>
-
-          <div className="mt-3 flex justify-end">
-            <button
-              type="button"
-              className="h-10 rounded-full bg-[#0A2D9E] px-4 text-sm font-semibold text-white sm:px-5 sm:text-base"
-            >
-              + Replace Meal
-            </button>
-          </div>
-
-          <MealCategoryHeader title="Lunch" icon={UtensilsCrossed} />
-          <MealCategoryHeader title="Dinner" icon={Soup} />
         </div>
       ) : null}
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <h2 className="text-2xl font-semibold">Select a Recipe</h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <RxCross2 size={25} />
+              </button>
+            </div>
+            <div className="p-5 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {availableRecipes.map((recipe: any) => (
+                <button
+                  key={recipe._id || recipe.id}
+                  onClick={() => handleCreateMealRecipe(recipe)}
+                  className="flex flex-col items-center p-2 border border-transparent rounded-lg hover:border-[#0A2D9E] hover:bg-gray-50 transition text-left"
+                >
+                  <div className="relative w-full aspect-square mb-2 overflow-hidden rounded-md bg-gray-100">
+                    {recipe.recipeImage || recipe.image ? (
+                      <Image
+                        src={recipe.recipeImage || recipe.image}
+                        alt={recipe.recipeName || recipe.name || "Recipe"}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : null}
+                  </div>
+                  <p className="font-medium text-sm line-clamp-2 w-full text-center">
+                    {recipe.recipeName || recipe.name || "Unnamed Recipe"}
+                  </p>
+                </button>
+              ))}
+              {availableRecipes.length === 0 && (
+                <p className="col-span-full text-center text-gray-500 py-4 text-2xl">
+                  No recipes available.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
 
-function MealCategoryHeader({
-  title,
-  icon: Icon,
-}: {
-  title: string;
-  icon: ComponentType<{ className?: string }>;
-}) {
-  return (
-    <div className="mt-4 overflow-x-auto rounded-[10px] bg-[#E9EAED]">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <div className="flex items-center gap-2 text-lg font-semibold text-[#434851] sm:text-xl">
-          <Icon className="h-6 w-6" />
-          <span>{title}</span>
-        </div>
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-sm font-semibold text-white sm:text-base"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Regenerate
-        </button>
-      </div>
+// function MealCategoryHeader({
+//   title,
+//   icon: Icon,
+// }: {
+//   title: string;
+//   icon: ComponentType<{ className?: string }>;
+// }) {
+//   return (
+//     <div className="mt-4 overflow-x-auto rounded-[10px] bg-[#E9EAED]">
+//       <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+//         <div className="flex items-center gap-2 text-lg font-semibold text-[#434851] sm:text-xl">
+//           <Icon className="h-6 w-6" />
+//           <span>{title}</span>
+//         </div>
+//         <button
+//           type="button"
+//           className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-sm font-semibold text-white sm:text-base"
+//         >
+//           <RefreshCw className="h-4 w-4" />
+//           Regenerate
+//         </button>
+//       </div>
 
-      <MealTableColumnHeader />
-    </div>
-  );
-}
+//       <MealTableColumnHeader />
+//     </div>
+//   );
+// }
 
-function MealCategoryBlock({
-  title,
-  icon: Icon,
-  children,
-}: {
-  title: string;
-  icon: ComponentType<{ className?: string }>;
-  children: ReactNode;
-}) {
-  return (
-    <div className="mt-4 overflow-x-auto rounded-[10px] bg-[#E9EAED]">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <div className="flex items-center gap-2 text-lg font-semibold text-[#434851] sm:text-xl">
-          <Icon className="h-6 w-6" />
-          <span>{title}</span>
-        </div>
-        <button
-          type="button"
-          className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-sm font-semibold text-white sm:text-base"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Regenerate
-        </button>
-      </div>
+// function MealCategoryBlock({
+//   title,
+//   icon: Icon,
+//   children,
+// }: {
+//   title: string;
+//   icon: ComponentType<{ className?: string }>;
+//   children: ReactNode;
+// }) {
+//   return (
+//     <div className="mt-4 overflow-x-auto rounded-[10px] bg-[#E9EAED]">
+//       <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+//         <div className="flex items-center gap-2 text-lg font-semibold text-[#434851] sm:text-xl">
+//           <Icon className="h-6 w-6" />
+//           <span>{title}</span>
+//         </div>
+//         <button
+//           type="button"
+//           className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-sm font-semibold text-white sm:text-base"
+//         >
+//           <RefreshCw className="h-4 w-4" />
+//           Regenerate
+//         </button>
+//       </div>
 
-      <MealTableColumnHeader />
+//       <MealTableColumnHeader />
 
-      <div className="min-w-[920px] border-t border-[#D6DAE0] bg-[#F2F3F5]">
-        {children}
-      </div>
-    </div>
-  );
-}
+//       <div className="min-w-[920px] border-t border-[#D6DAE0] bg-[#F2F3F5]">
+//         {children}
+//       </div>
+//     </div>
+//   );
+// }
 
-function MealTableColumnHeader() {
-  return (
-    <div className="min-w-[920px] border-t border-[#D6DAE0] bg-[#E1E4EA] px-4 py-2.5">
-      <div
-        className={`${MEAL_TABLE_GRID_CLASS} text-base font-semibold text-[#677081] sm:text-lg`}
-      >
-        {NUTRITION_COLUMN_HEADERS.map((label, index) => (
-          <p key={label} className={index === 0 ? "text-left" : "text-center"}>
-            {label}
-          </p>
-        ))}
-      </div>
-    </div>
-  );
-}
+// function MealTableColumnHeader() {
+//   return (
+//     <div className="min-w-[920px] border-t border-[#D6DAE0] bg-[#E1E4EA] px-4 py-2.5">
+//       <div
+//         className={`${MEAL_TABLE_GRID_CLASS} text-base font-semibold text-[#677081] sm:text-lg`}
+//       >
+//         {NUTRITION_COLUMN_HEADERS.map((label, index) => (
+//           <p key={label} className={index === 0 ? "text-left" : "text-center"}>
+//             {label}
+//           </p>
+//         ))}
+//       </div>
+//     </div>
+//   );
+// }
 
-function MealListRow({
-  meal,
-  checked = false,
-  highlighted = false,
-  onSelect,
-}: {
-  meal: MealCatalogItem;
-  checked?: boolean;
-  highlighted?: boolean;
-  onSelect?: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`${MEAL_TABLE_GRID_CLASS} w-full border-b border-[#D8DCE3] px-4 py-3 text-base font-semibold text-[#4D525D] sm:text-lg ${
-        highlighted
-          ? "relative z-[1] bg-[#E6E8EC] ring-2 ring-inset ring-[#0A2D9E]"
-          : "hover:bg-[#ECEEF2]"
-      }`}
-    >
-      <div className="flex min-w-0 items-center gap-3">
-        <input
-          type="checkbox"
-          checked={checked}
-          readOnly
-          className="h-5 w-5 rounded border-[#59606B]"
-        />
-        <div className="relative h-9 w-9 overflow-hidden rounded-[6px] border border-[#B3BEDA]">
-          <Image
-            src={meal.image}
-            alt={meal.title}
-            fill
-            className="object-cover"
-          />
-        </div>
-        <p className="truncate whitespace-nowrap text-left" title={meal.title}>
-          {truncateMealName(meal.title)}
-        </p>
-      </div>
-      <p className="text-center tabular-nums">{meal.nutrition.fiber}</p>
-      <p className="text-center tabular-nums">{meal.nutrition.fat}</p>
-      <p className="text-center tabular-nums">{meal.nutrition.carb}</p>
-      <p className="text-center tabular-nums">{meal.nutrition.iron}</p>
-      <p className="text-center tabular-nums">{meal.nutrition.protein}</p>
-      <p className="text-center tabular-nums">{meal.nutrition.calorie}</p>
-      <div className="flex items-center justify-center gap-2">
-        <span>{meal.nutrition.duration}</span>
-        <CalendarDays className="h-5 w-5 text-[#545B67]" />
-      </div>
-    </button>
-  );
-}
+// function MealListRow({
+//   meal,
+//   checked = false,
+//   highlighted = false,
+//   onSelect,
+// }: {
+//   meal: MealCatalogItem;
+//   checked?: boolean;
+//   highlighted?: boolean;
+//   onSelect?: () => void;
+// }) {
+//   return (
+//     <button
+//       type="button"
+//       onClick={onSelect}
+//       className={`${MEAL_TABLE_GRID_CLASS} w-full border-b border-[#D8DCE3] px-4 py-3 text-base font-semibold text-[#4D525D] sm:text-lg ${
+//         highlighted
+//           ? "relative z-[1] bg-[#E6E8EC] ring-2 ring-inset ring-[#0A2D9E]"
+//           : "hover:bg-[#ECEEF2]"
+//       }`}
+//     >
+//       <div className="flex min-w-0 items-center gap-3">
+//         <input
+//           type="checkbox"
+//           checked={checked}
+//           readOnly
+//           className="h-5 w-5 rounded border-[#59606B]"
+//         />
+//         <div className="relative h-9 w-9 overflow-hidden rounded-[6px] border border-[#B3BEDA]">
+//           <Image
+//             src={meal.image}
+//             alt={meal.title}
+//             fill
+//             className="object-cover"
+//           />
+//         </div>
+//         <p className="truncate whitespace-nowrap text-left" title={meal.title}>
+//           {truncateMealName(meal.title)}
+//         </p>
+//       </div>
+//       <p className="text-center tabular-nums">{meal.nutrition.fiber}</p>
+//       <p className="text-center tabular-nums">{meal.nutrition.fat}</p>
+//       <p className="text-center tabular-nums">{meal.nutrition.carb}</p>
+//       <p className="text-center tabular-nums">{meal.nutrition.iron}</p>
+//       <p className="text-center tabular-nums">{meal.nutrition.protein}</p>
+//       <p className="text-center tabular-nums">{meal.nutrition.calorie}</p>
+//       <div className="flex items-center justify-center gap-2">
+//         <span>{meal.nutrition.duration}</span>
+//         <CalendarDays className="h-5 w-5 text-[#545B67]" />
+//       </div>
+//     </button>
+//   );
+// }
 
 export default MealPlan;
