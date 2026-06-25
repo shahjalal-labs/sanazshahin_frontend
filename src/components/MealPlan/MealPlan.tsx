@@ -230,7 +230,12 @@ const createInitialEntries = (): MealPlanEntry[] => {
   });
 };
 
-const formatISODate = (date: Date) => date.toISOString().split("T")[0];
+const formatISODate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 const formatDisplayDate = (isoDate: string) => {
   const date = new Date(`${isoDate}T00:00:00`);
@@ -282,9 +287,14 @@ function MealPlan() {
           : [];
 
     return userMealPlans.reduce<Record<string, any>>((acc: any, plan: any) => {
-      const dateStr = (plan.selectedDate || plan.date)?.split("T")[0];
-      if (dateStr) {
-        acc[dateStr] = plan;
+      const planDate = plan.selectedDate || plan.date;
+      if (planDate) {
+        const dateObj = new Date(planDate);
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const day = String(dateObj.getDate()).padStart(2, "0");
+        const localDateStr = `${year}-${month}-${day}`;
+        acc[localDateStr] = plan;
       }
       return acc;
     }, {});
