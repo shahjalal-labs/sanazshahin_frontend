@@ -287,14 +287,9 @@ function MealPlan() {
           : [];
 
     return userMealPlans.reduce<Record<string, any>>((acc: any, plan: any) => {
-      const planDate = plan.selectedDate || plan.date;
-      if (planDate) {
-        const dateObj = new Date(planDate);
-        const year = dateObj.getFullYear();
-        const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-        const day = String(dateObj.getDate()).padStart(2, "0");
-        const localDateStr = `${year}-${month}-${day}`;
-        acc[localDateStr] = plan;
+      const dateStr = (plan.selectedDate || plan.date)?.split("T")[0];
+      if (dateStr) {
+        acc[dateStr] = plan;
       }
       return acc;
     }, {});
