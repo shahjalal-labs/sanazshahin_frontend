@@ -251,8 +251,13 @@ const truncateMealName = (name: string, maxChars = 10) => {
 };
 
 function MealPlan() {
-  const [currentMonth, setCurrentMonth] = useState(new Date(2026, 0, 1));
-  const [selectedDate, setSelectedDate] = useState("2026-01-04");
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+  const [selectedDate, setSelectedDate] = useState(() =>
+    formatISODate(new Date()),
+  );
 
   const { data: availableRecipesData } = useGetAvailableRecipesQuery({});
   const { data: userMealPlansData, refetch: refetchUserMealPlans } =
@@ -517,14 +522,14 @@ function MealPlan() {
                 <RxCross2 size={25} />
               </button>
             </div>
-            <div className="p-5 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="p-5 overflow-y-auto flex flex-wrap gap-4">
               {availableRecipes.map((recipe: any) => (
                 <button
                   key={recipe._id || recipe.id}
                   onClick={() => handleCreateMealRecipe(recipe)}
                   className="flex flex-col items-center p-2 border border-transparent rounded-lg hover:border-[#0A2D9E] hover:bg-gray-50 transition text-left"
                 >
-                  <div className="relative w-full aspect-square mb-2 overflow-hidden rounded-md bg-gray-100">
+                  <div className="relative h-28 w-28 mb-2 overflow-hidden rounded-md bg-gray-100 shrink-0">
                     {recipe.recipeImage || recipe.image ? (
                       <Image
                         src={recipe.recipeImage || recipe.image}
