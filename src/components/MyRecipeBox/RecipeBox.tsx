@@ -10,6 +10,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import Swal from "sweetalert2";
+import RecipeCardSkeleton from "../ui/RecipeCardSkeleton";
 import RecipeAddModal from "./RecipeAddModal";
 import RecipeEditModal from "./RecipeEditModal";
 
@@ -21,7 +22,7 @@ function RecipeBox() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { data: myRecipes } = useMyRecipesQuery({
+  const { data: myRecipes, isLoading } = useMyRecipesQuery({
     page: currentPage,
     limit: ITEMS_PER_PAGE,
   });
@@ -121,6 +122,10 @@ function RecipeBox() {
     }
   };
 
+  if (isLoading) {
+    return <RecipeCardSkeleton />;
+  }
+
   return (
     <>
       <section className="container mx-auto w-full px-4 pb-16">
@@ -148,22 +153,22 @@ function RecipeBox() {
         <div className="mt-7 grid grid-cols-1 gap-x-5 gap-y-8 sm:grid-cols-2 xl:grid-cols-3">
           {recipes?.map((recipe) => (
             <button
-              key={recipe.id}
+              key={recipe?.id}
               type="button"
               onClick={() => setSelectedRecipe(recipe)}
               className="group text-left"
             >
               <div className="relative h-[280px] w-full overflow-hidden rounded-[26px] border border-[#4668C8] bg-white">
                 <Image
-                  src={recipe.recipeImage}
-                  alt={recipe.recipeName}
+                  src={recipe?.recipeImage}
+                  alt={recipe?.recipeName}
                   fill
                   className="object-cover transition duration-300 group-hover:scale-[1.02]"
                   sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
                 />
               </div>
               <h2 className="mx-auto mt-3 max-w-[92%] text-center text-lg font-semibold leading-[1.3] text-[#1141B5]">
-                {recipe.recipeName}
+                {recipe?.recipeName}
               </h2>
             </button>
           ))}

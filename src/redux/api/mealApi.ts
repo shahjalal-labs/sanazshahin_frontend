@@ -26,6 +26,14 @@ const mealApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["meal"],
     }),
+
+    mealPlanGenerate: builder.mutation({
+      query: (recipeId) => ({
+        url: `/meal-plan/generate/${recipeId}`,
+        method: "POST",
+      }),
+      invalidatesTags: ["meal"],
+    }),
   }),
 });
 
@@ -33,4 +41,5 @@ export const {
   useGetAvailableRecipesQuery,
   useGetUserMealPlansQuery,
   useCreateMealRecipeMutation,
+  useMealPlanGenerateMutation,
 } = mealApi;

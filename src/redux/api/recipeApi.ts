@@ -45,10 +45,10 @@ const recipeApi = baseApi.injectEndpoints({
     }),
 
     getAllRecipes: builder.query({
-      query: ({ page, limit }) => ({
+      query: ({ page, limit, searchTerm }) => ({
         url: `/recipe/all`,
         method: "GET",
-        params: { page, limit },
+        params: { page, limit, searchTerm },
       }),
 
       providesTags: ["Recipe"],
@@ -71,6 +71,13 @@ const recipeApi = baseApi.injectEndpoints({
         response?.result ?? response,
       providesTags: ["Recipe"],
     }),
+
+    reripeGroceriList: builder.mutation({
+      query: (recipeId) => ({
+        url: `/recipe/grocery-list/${recipeId}`,
+        method: "POST",
+      }),
+    }),
   }),
 });
 
@@ -83,4 +90,5 @@ export const {
   useGetAllRecipesQuery,
   useToggleRecipeBookmarkMutation,
   useGetRecipeBookmarksQuery,
+  useReripeGroceriListMutation,
 } = recipeApi;

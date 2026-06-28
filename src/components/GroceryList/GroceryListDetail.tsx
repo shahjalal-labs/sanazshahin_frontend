@@ -1,33 +1,57 @@
 "use client";
 
+import { useReripeGroceriListMutation, useMyRecipeDetailsQuery } from "@/redux/api/recipeApi";
 import { Checkbox } from "@/components/ui/Checkbox";
-import { getGroceryRecipeById } from "@/lib/grocery";
 import { jsPDF } from "jspdf";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface GroceryListDetailProps {
-  recipeId: number;
+  recipeId: string;
 }
 
 function GroceryListDetail({ recipeId }: GroceryListDetailProps) {
   const router = useRouter();
-  const recipe = getGroceryRecipeById(recipeId);
+
+  const { data: recipeDetails } = useMyRecipeDetailsQuery(recipeId);
+  const title = recipeDetails?.result?.recipeName || recipeDetails?.result?.title || "Grocery List";
+
+  const [getGroceryList, { data: groceryData, isLoading }] =
+    useReripeGroceriListMutation();
+
+  useEffect(() => {
+    getGroceryList(recipeId);
+  }, [recipeId, getGroceryList]);
+
+  const sections = useMemo(() => {
+    if (groceryData?.result) {
+      return groceryData.result
+        .filter((cat: any) => cat.items.length > 0)
+        .map((cat: any) => ({
+          id: cat.category.toLowerCase().replace(/\s+/g, "-"),
+          title: cat.category,
+          items: cat.items.map((item: any, index: number) => ({
+            id: `${index}`,
+            name: item.name,
+            quantity: `${item.quantity} ${item.unit}`,
+          })),
+        }));
+    }
+
+    return [];
+  }, [groceryData]);
 
   const allItemIds = useMemo(() => {
     return (
-      recipe?.sections.flatMap((section) =>
-        section.items.map((item) => `${section.id}-${item.id}`),
+      sections.flatMap((section: any) =>
+        section.items.map((item: any) => `${section.id}-${item.id}`),
       ) ?? []
     );
-  }, [recipe]);
+  }, [sections]);
 
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
 
-  if (!recipe) {
-    return null;
-  }
 
   const toggleItem = (itemId: string) => {
     setCheckedItems((prev) =>
@@ -68,7 +92,7 @@ function GroceryListDetail({ recipeId }: GroceryListDetailProps) {
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(13);
-    doc.text(`Recipe: ${recipe.title}`, left, y);
+    doc.text(`Recipe: ${title}`, left, y);
     y += 24;
 
     const completedCount = checkedItems.length;
@@ -77,14 +101,14 @@ function GroceryListDetail({ recipeId }: GroceryListDetailProps) {
     doc.text(`Completed: ${completedCount}/${totalCount}`, left, y);
     y += 20;
 
-    recipe.sections.forEach((section) => {
+    sections.forEach((section: any) => {
       ensureSpace(34);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(14);
       doc.text(`${section.title} (${section.items.length})`, left, y);
       y += 18;
 
-      section.items.forEach((item) => {
+      section.items.forEach((item: any) => {
         const itemKey = `${section.id}-${item.id}`;
         const isChecked = checkedItems.includes(itemKey);
         const itemText = `[${isChecked ? "x" : " "}] ${item.name} - ${item.quantity}`;
@@ -101,7 +125,7 @@ function GroceryListDetail({ recipeId }: GroceryListDetailProps) {
       y += 8;
     });
 
-    const safeTitle = recipe.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const safeTitle = title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     doc.save(`grocery-list-${safeTitle}.pdf`);
   };
 
@@ -118,7 +142,7 @@ function GroceryListDetail({ recipeId }: GroceryListDetailProps) {
         </button>
 
         <h1 className="px-10 text-center font-bold leading-tight text-[#171717] [font-size:clamp(24px,2vw,31px)]">
-          {recipe.title}
+          {title}
         </h1>
       </header>
 
@@ -132,44 +156,48 @@ function GroceryListDetail({ recipeId }: GroceryListDetailProps) {
       </div>
 
       <div>
-        {recipe.sections.map((section) => (
-          <div key={section.id} className="mb-8 last:mb-0">
-            <h3 className="mb-3 font-bold text-[#102E85] [font-size:clamp(24px,2.2vw,42px)]">
-              {section.title} ({section.items.length})
-            </h3>
+        {isLoading ? (
+          <p className="text-center text-[#4B5A5E]">Loading grocery list...</p>
+        ) : (
+          sections.map((section: any) => (
+            <div key={section.id} className="mb-8 last:mb-0">
+              <h3 className="mb-3 font-bold text-[#102E85] [font-size:clamp(24px,2.2vw,42px)]">
+                {section.title} ({section.items.length})
+              </h3>
 
-            <ul>
-              {section.items.map((item) => {
-                const itemKey = `${section.id}-${item.id}`;
-                const isChecked = checkedItems.includes(itemKey);
+              <ul>
+                {section.items.map((item: any) => {
+                  const itemKey = `${section.id}-${item.id}`;
+                  const isChecked = checkedItems.includes(itemKey);
 
-                return (
-                  <li
-                    key={itemKey}
-                    className="flex min-h-[66px] items-center justify-between border-t border-[#E9E9EA] py-3"
-                  >
-                    <label className="flex items-center gap-2.5 font-medium text-[#191919] [font-size:clamp(18px,1.56vw,30px)]">
-                      <Checkbox
-                        checked={isChecked}
-                        onCheckedChange={() => toggleItem(itemKey)}
-                        className="h-5 w-5 rounded-[4px] border-[#153E9B] data-[state=checked]:bg-[#153E9B]"
-                      />
-                      <span
-                        className={isChecked ? "line-through opacity-55" : ""}
-                      >
-                        {item.name}
+                  return (
+                    <li
+                      key={itemKey}
+                      className="flex min-h-[66px] items-center justify-between border-t border-[#E9E9EA] py-3"
+                    >
+                      <label className="flex items-center gap-2.5 font-medium text-[#191919] [font-size:clamp(18px,1.56vw,30px)]">
+                        <Checkbox
+                          checked={isChecked}
+                          onCheckedChange={() => toggleItem(itemKey)}
+                          className="h-5 w-5 rounded-[4px] border-[#153E9B] data-[state=checked]:bg-[#153E9B]"
+                        />
+                        <span
+                          className={isChecked ? "line-through opacity-55" : ""}
+                        >
+                          {item.name}
+                        </span>
+                      </label>
+
+                      <span className="font-semibold text-[#102E85] [font-size:clamp(18px,1.56vw,30px)]">
+                        {item.quantity}
                       </span>
-                    </label>
-
-                    <span className="font-semibold text-[#102E85] [font-size:clamp(18px,1.56vw,30px)]">
-                      {item.quantity}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))
+        )}
       </div>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-end">

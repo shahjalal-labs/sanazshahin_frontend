@@ -11,10 +11,19 @@ import {
   useCreateMealRecipeMutation,
   useGetAvailableRecipesQuery,
   useGetUserMealPlansQuery,
+  useMealPlanGenerateMutation,
 } from "@/redux/api/mealApi";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Moon,
+  RefreshCw,
+  Sun,
+  Sunrise,
+} from "lucide-react";
 import Image, { StaticImageData } from "next/image";
-import { useMemo, useState } from "react";
+import { ComponentType, ReactNode, useMemo, useState } from "react";
 import { RxCross2 } from "react-icons/rx";
 
 type MealKey =
@@ -40,12 +49,6 @@ type MealCatalogItem = {
     calorie: number;
     duration: string;
   };
-};
-
-type MealPlanEntry = {
-  date: string;
-  dayNumber: number;
-  mealKey: MealKey;
 };
 
 const WEEK_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -215,21 +218,6 @@ const planSequence: MealKey[] = [
   "barley",
 ];
 
-const createInitialEntries = (): MealPlanEntry[] => {
-  const startDate = new Date(2026, 0, 3);
-
-  return planSequence.map((mealKey, index) => {
-    const current = new Date(startDate);
-    current.setDate(startDate.getDate() + index);
-
-    return {
-      date: current.toISOString().split("T")[0],
-      dayNumber: index + 1,
-      mealKey,
-    };
-  });
-};
-
 const formatISODate = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -269,13 +257,37 @@ function MealPlan() {
     useGetUserMealPlansQuery({});
   const [createMealRecipe] = useCreateMealRecipeMutation();
 
+  const [mealPlanGenerate] = useMealPlanGenerateMutation();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDateForModal, setSelectedDateForModal] = useState<
     string | null
   >(null);
 
+  const [generatedMeals, setGeneratedMeals] = useState<any[] | null>(null);
+
+  const handleRegenerate = async () => {
+    if (!selectedEntry) return;
+    const recipeId =
+      selectedEntry.recipe?._id ||
+      selectedEntry.recipe?.id ||
+      selectedEntry.recipeId ||
+      selectedEntry.id ||
+      selectedEntry._id;
+
+    if (!recipeId) return;
+
+    try {
+      const res = await mealPlanGenerate(recipeId).unwrap();
+      if (res?.success && res?.result?.meals?.length >= 3) {
+        setGeneratedMeals(res.result.meals);
+      }
+    } catch (error) {
+      console.error("Failed to generate meal plan:", error);
+    }
+  };
+
   const availableRecipes = availableRecipesData?.result || [];
-  console.log(availableRecipes);
 
   const entryByDate = useMemo(() => {
     const userMealPlans: any[] = Array.isArray(userMealPlansData?.result)
@@ -418,6 +430,7 @@ function MealPlan() {
                   type="button"
                   onClick={() => {
                     setSelectedDate(isoDate);
+                    setGeneratedMeals(null);
                     if (!planEntry) {
                       setSelectedDateForModal(isoDate);
                       setIsModalOpen(true);
@@ -481,37 +494,56 @@ function MealPlan() {
             </span>
           </h2>
 
-          <div className="mt-5 rounded-2xl border border-[#E7E8EC] bg-white p-4 shadow-sm sm:p-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-[#D7DCE5] bg-[#F2F4F8]">
-                  {selectedEntry.recipe?.recipeImage ||
-                  selectedEntry.recipeImage ? (
-                    <Image
-                      src={
-                        selectedEntry.recipe?.recipeImage ||
-                        selectedEntry.recipeImage
-                      }
-                      alt={
-                        selectedEntry.recipe?.recipeName ||
-                        selectedEntry.recipeName ||
-                        "Recipe"
-                      }
-                      fill
-                      className="object-cover"
-                    />
-                  ) : null}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-lg font-semibold text-[#202329] sm:text-xl">
-                    {selectedEntry.recipe?.recipeName ||
-                      selectedEntry.recipeName ||
-                      "Unnamed Recipe"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <MealCategoryBlock
+            title="Breakfast"
+            icon={Sunrise}
+            onRegenerate={handleRegenerate}
+          >
+            {generatedMeals ? (
+              <MealListRow meal={generatedMeals[0]} />
+            ) : (
+              <MealListRow
+                meal={{
+                  title:
+                    selectedEntry.recipe?.recipeName ||
+                    selectedEntry.recipeName ||
+                    "Unnamed Recipe",
+                  image:
+                    selectedEntry.recipe?.recipeImage ||
+                    selectedEntry.recipeImage,
+                  nutrition: {
+                    fiber: 0,
+                    fat: 0,
+                    carb: 0,
+                    iron: 0,
+                    protein: 0,
+                    calorie: 0,
+                    duration: "1 day",
+                  },
+                }}
+              />
+            )}
+          </MealCategoryBlock>
+
+          <MealCategoryBlock
+            title="Lunch"
+            icon={Sun}
+            onRegenerate={handleRegenerate}
+          >
+            {generatedMeals && generatedMeals.length > 1 ? (
+              <MealListRow meal={generatedMeals[1]} />
+            ) : null}
+          </MealCategoryBlock>
+
+          <MealCategoryBlock
+            title="Dinner"
+            icon={Moon}
+            onRegenerate={handleRegenerate}
+          >
+            {generatedMeals && generatedMeals.length > 2 ? (
+              <MealListRow meal={generatedMeals[2]} />
+            ) : null}
+          </MealCategoryBlock>
         </div>
       ) : null}
 
@@ -562,136 +594,157 @@ function MealPlan() {
   );
 }
 
-// function MealCategoryHeader({
-//   title,
-//   icon: Icon,
-// }: {
-//   title: string;
-//   icon: ComponentType<{ className?: string }>;
-// }) {
-//   return (
-//     <div className="mt-4 overflow-x-auto rounded-[10px] bg-[#E9EAED]">
-//       <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-//         <div className="flex items-center gap-2 text-lg font-semibold text-[#434851] sm:text-xl">
-//           <Icon className="h-6 w-6" />
-//           <span>{title}</span>
-//         </div>
-//         <button
-//           type="button"
-//           className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-sm font-semibold text-white sm:text-base"
-//         >
-//           <RefreshCw className="h-4 w-4" />
-//           Regenerate
-//         </button>
-//       </div>
+function MealCategoryHeader({
+  title,
+  icon: Icon,
+  onRegenerate,
+}: {
+  title: string;
+  icon: ComponentType<{ className?: string }>;
+  onRegenerate?: () => void;
+}) {
+  return (
+    <div className="mt-4 overflow-x-auto rounded-[10px] bg-[#E9EAED]">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <div className="flex items-center gap-2 text-lg font-semibold text-[#434851] sm:text-xl">
+          <Icon className="h-6 w-6" />
+          <span>{title}</span>
+        </div>
+        <button
+          type="button"
+          onClick={onRegenerate}
+          className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-sm font-semibold text-white sm:text-base"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Regenerate
+        </button>
+      </div>
 
-//       <MealTableColumnHeader />
-//     </div>
-//   );
-// }
+      <MealTableColumnHeader />
+    </div>
+  );
+}
 
-// function MealCategoryBlock({
-//   title,
-//   icon: Icon,
-//   children,
-// }: {
-//   title: string;
-//   icon: ComponentType<{ className?: string }>;
-//   children: ReactNode;
-// }) {
-//   return (
-//     <div className="mt-4 overflow-x-auto rounded-[10px] bg-[#E9EAED]">
-//       <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-//         <div className="flex items-center gap-2 text-lg font-semibold text-[#434851] sm:text-xl">
-//           <Icon className="h-6 w-6" />
-//           <span>{title}</span>
-//         </div>
-//         <button
-//           type="button"
-//           className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-sm font-semibold text-white sm:text-base"
-//         >
-//           <RefreshCw className="h-4 w-4" />
-//           Regenerate
-//         </button>
-//       </div>
+function MealCategoryBlock({
+  title,
+  icon: Icon,
+  children,
+  onRegenerate,
+}: {
+  title: string;
+  icon: ComponentType<{ className?: string }>;
+  children: ReactNode;
+  onRegenerate?: () => void;
+}) {
+  return (
+    <div className="mt-4 overflow-x-auto rounded-[10px] bg-[#E9EAED]">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <div className="flex items-center gap-2 text-lg font-semibold text-[#434851] sm:text-xl">
+          <Icon className="h-6 w-6" />
+          <span>{title}</span>
+        </div>
+        <button
+          type="button"
+          onClick={onRegenerate}
+          className="inline-flex items-center gap-2 rounded-full bg-[#0A2D9E] px-4 py-2 text-sm font-semibold text-white sm:text-base"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Regenerate
+        </button>
+      </div>
 
-//       <MealTableColumnHeader />
+      <MealTableColumnHeader />
 
-//       <div className="min-w-[920px] border-t border-[#D6DAE0] bg-[#F2F3F5]">
-//         {children}
-//       </div>
-//     </div>
-//   );
-// }
+      <div className="min-w-[920px] border-t border-[#D6DAE0] bg-[#F2F3F5]">
+        {children}
+      </div>
+    </div>
+  );
+}
 
-// function MealTableColumnHeader() {
-//   return (
-//     <div className="min-w-[920px] border-t border-[#D6DAE0] bg-[#E1E4EA] px-4 py-2.5">
-//       <div
-//         className={`${MEAL_TABLE_GRID_CLASS} text-base font-semibold text-[#677081] sm:text-lg`}
-//       >
-//         {NUTRITION_COLUMN_HEADERS.map((label, index) => (
-//           <p key={label} className={index === 0 ? "text-left" : "text-center"}>
-//             {label}
-//           </p>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// }
+function MealTableColumnHeader() {
+  return (
+    <div className="min-w-[920px] border-t border-[#D6DAE0] bg-[#E1E4EA] px-4 py-2.5">
+      <div
+        className={`${MEAL_TABLE_GRID_CLASS} text-base font-semibold text-[#677081] sm:text-lg`}
+      >
+        {NUTRITION_COLUMN_HEADERS.map((label, index) => (
+          <p key={label} className={index === 0 ? "text-left" : "text-center"}>
+            {label}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-// function MealListRow({
-//   meal,
-//   checked = false,
-//   highlighted = false,
-//   onSelect,
-// }: {
-//   meal: MealCatalogItem;
-//   checked?: boolean;
-//   highlighted?: boolean;
-//   onSelect?: () => void;
-// }) {
-//   return (
-//     <button
-//       type="button"
-//       onClick={onSelect}
-//       className={`${MEAL_TABLE_GRID_CLASS} w-full border-b border-[#D8DCE3] px-4 py-3 text-base font-semibold text-[#4D525D] sm:text-lg ${
-//         highlighted
-//           ? "relative z-[1] bg-[#E6E8EC] ring-2 ring-inset ring-[#0A2D9E]"
-//           : "hover:bg-[#ECEEF2]"
-//       }`}
-//     >
-//       <div className="flex min-w-0 items-center gap-3">
-//         <input
-//           type="checkbox"
-//           checked={checked}
-//           readOnly
-//           className="h-5 w-5 rounded border-[#59606B]"
-//         />
-//         <div className="relative h-9 w-9 overflow-hidden rounded-[6px] border border-[#B3BEDA]">
-//           <Image
-//             src={meal.image}
-//             alt={meal.title}
-//             fill
-//             className="object-cover"
-//           />
-//         </div>
-//         <p className="truncate whitespace-nowrap text-left" title={meal.title}>
-//           {truncateMealName(meal.title)}
-//         </p>
-//       </div>
-//       <p className="text-center tabular-nums">{meal.nutrition.fiber}</p>
-//       <p className="text-center tabular-nums">{meal.nutrition.fat}</p>
-//       <p className="text-center tabular-nums">{meal.nutrition.carb}</p>
-//       <p className="text-center tabular-nums">{meal.nutrition.iron}</p>
-//       <p className="text-center tabular-nums">{meal.nutrition.protein}</p>
-//       <p className="text-center tabular-nums">{meal.nutrition.calorie}</p>
-//       <div className="flex items-center justify-center gap-2">
-//         <span>{meal.nutrition.duration}</span>
-//         <CalendarDays className="h-5 w-5 text-[#545B67]" />
-//       </div>
-//     </button>
-//   );
-// }
+function MealListRow({
+  meal,
+  checked = false,
+  highlighted = false,
+  onSelect,
+}: {
+  meal: any;
+  checked?: boolean;
+  highlighted?: boolean;
+  onSelect?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`${MEAL_TABLE_GRID_CLASS} w-full border-b border-[#D8DCE3] px-4 py-3 text-base font-semibold text-[#4D525D] sm:text-lg ${
+        highlighted
+          ? "relative z-[1] bg-[#E6E8EC] ring-2 ring-inset ring-[#0A2D9E]"
+          : "hover:bg-[#ECEEF2]"
+      }`}
+    >
+      <div className="flex min-w-0 items-center gap-3">
+        <input
+          type="checkbox"
+          checked={checked}
+          readOnly
+          className="h-5 w-5 rounded border-[#59606B]"
+        />
+        <div className="relative h-9 w-9 overflow-hidden rounded-[6px] border border-[#B3BEDA]">
+          <Image
+            src={meal.image}
+            alt={meal.title}
+            fill
+            className="object-cover"
+          />
+        </div>
+        <p
+          className="truncate whitespace-nowrap text-left"
+          title={meal.title || meal.name}
+        >
+          {truncateMealName(meal.title || meal.name)}
+        </p>
+      </div>
+      <p className="text-center tabular-nums">
+        {meal.nutrition?.fiber ?? meal.fiber ?? 0}
+      </p>
+      <p className="text-center tabular-nums">
+        {meal.nutrition?.fat ?? meal.fat ?? 0}
+      </p>
+      <p className="text-center tabular-nums">
+        {meal.nutrition?.carb ?? meal.carb ?? 0}
+      </p>
+      <p className="text-center tabular-nums">
+        {meal.nutrition?.iron ?? meal.iron ?? 0}
+      </p>
+      <p className="text-center tabular-nums">
+        {meal.nutrition?.protein ?? meal.protein ?? 0}
+      </p>
+      <p className="text-center tabular-nums">
+        {meal.nutrition?.calorie ?? meal.calorie ?? 0}
+      </p>
+      <div className="flex items-center justify-center gap-2">
+        <span>{meal.nutrition?.duration ?? meal.duration ?? "1 day"}</span>
+        <CalendarDays className="h-5 w-5 text-[#545B67]" />
+      </div>
+    </button>
+  );
+}
 
 export default MealPlan;

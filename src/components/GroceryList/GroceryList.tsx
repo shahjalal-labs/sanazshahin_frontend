@@ -1,19 +1,25 @@
 "use client";
 
-import { groceryRecipeCards } from "@/lib/grocery";
+import { useGetAllRecipesQuery } from "@/redux/api/recipeApi";
 import { Bookmark, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-const UI_TOTAL_PAGES = 440;
+import RecipeCardSkeleton from "../ui/RecipeCardSkeleton";
 
 function GroceryList() {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
-  const [savedRecipes, setSavedRecipes] = useState<number[]>([]);
+  const [savedRecipes, setSavedRecipes] = useState<string[]>([]);
 
-  const toggleSave = (id: number) => {
+  const { data, isLoading } = useGetAllRecipesQuery({
+    page: currentPage,
+    limit: 6,
+  });
+  const recipes = data?.result?.recipes || [];
+  const totalPages = data?.result?.meta?.totalPages || 1;
+
+  const toggleSave = (id: string) => {
     setSavedRecipes((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
@@ -24,8 +30,12 @@ function GroceryList() {
   };
 
   const handleNext = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, UI_TOTAL_PAGES));
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
+
+  if (isLoading) {
+    return <RecipeCardSkeleton />;
+  }
 
   return (
     <section className="mx-auto w-full max-w-[1180px] pb-10 pt-[104px]">
@@ -38,7 +48,7 @@ function GroceryList() {
         </p>
 
         <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-          {groceryRecipeCards.map((recipe) => (
+          {recipes.map((recipe: any) => (
             <article
               key={recipe.id}
               className="cursor-pointer"
@@ -54,8 +64,8 @@ function GroceryList() {
             >
               <div className="relative aspect-[0.9] overflow-hidden rounded-[24px] border border-[#3157BC]">
                 <Image
-                  src={recipe.image}
-                  alt={recipe.title}
+                  src={recipe.recipeImage}
+                  alt={recipe.recipeName}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
                   className="object-cover"
@@ -80,7 +90,7 @@ function GroceryList() {
               </div>
 
               <h2 className="whitespace-pre-line px-2 pt-3 text-center font-semibold leading-[1.28] text-[#123996] [font-size:clamp(20px,1.12vw,28px)]">
-                {recipe.title}
+                {recipe.recipeName}
               </h2>
             </article>
           ))}
@@ -99,7 +109,10 @@ function GroceryList() {
             </button>
 
             <div className="flex items-center gap-1.5 text-sm">
-              {[1, 2, 3].map((pageNumber) => (
+              {Array.from(
+                { length: Math.min(3, totalPages) },
+                (_, i) => i + 1,
+              ).map((pageNumber) => (
                 <button
                   key={pageNumber}
                   type="button"
@@ -114,21 +127,24 @@ function GroceryList() {
                 </button>
               ))}
 
-              <span className="px-1 text-[#7B8290]">...</span>
-
-              <button
-                type="button"
-                onClick={() => setCurrentPage(UI_TOTAL_PAGES)}
-                className="px-1 text-sm font-semibold text-[#2A2A2A] transition-colors hover:text-[#2D56C8]"
-              >
-                {UI_TOTAL_PAGES}
-              </button>
+              {totalPages > 3 && (
+                <>
+                  <span className="px-1 text-[#7B8290]">...</span>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage(totalPages)}
+                    className="px-1 text-sm font-semibold text-[#2A2A2A] transition-colors hover:text-[#2D56C8]"
+                  >
+                    {totalPages}
+                  </button>
+                </>
+              )}
             </div>
 
             <button
               type="button"
               onClick={handleNext}
-              disabled={currentPage === UI_TOTAL_PAGES}
+              disabled={currentPage === totalPages}
               className="grid h-8 w-8 place-items-center rounded-md text-[#E7A5C6] transition-colors hover:bg-[#F8EEF4] disabled:cursor-not-allowed disabled:opacity-55"
               aria-label="Next page"
             >
