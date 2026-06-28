@@ -132,7 +132,7 @@ export default function Sidebar() {
       >
         <div className="flex items-center justify-between mb-2 pb-4">
           <Link href="/" className="flex-shrink-0" onClick={closeMobileNav}>
-            <span className="font-viktor-script text-primary text-[26px] sm:text-[32px] leading-none select-none">
+            <span className="font-viktor-script text-primary text-2xl leading-none select-none">
               Tomatoes With Lemon Club
             </span>
           </Link>
