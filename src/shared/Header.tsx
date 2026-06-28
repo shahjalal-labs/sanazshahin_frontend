@@ -216,18 +216,16 @@ export default function Header() {
             >
               <SearchIcon />
             </button>
-
             {/* Bell icon with notification badge */}
-            <button
+            {/* <button
               className="relative p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
               aria-label="Notifications"
               onClick={handleNotification}
             >
               <BellIcon />
-              {/* Notification dot */}
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
-            </button>
 
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
+            </button> */}
             <div className="relative" ref={dropdownRef}>
               <button
                 className="p-1 rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
@@ -253,17 +251,17 @@ export default function Header() {
                 <div className="absolute right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50 animate-fade-in">
                   {token ? (
                     <>
-                      <div className="px-4 py-3 w-64">
-                        <p className="text-sm font-semibold text-gray-800 truncate">
+                      <div className="px-4 py-6 w-72">
+                        <p className="text-lg font-semibold text-gray-800 truncate">
                           {profile?.fullName}
                         </p>
-                        <p className="text-xs text-gray-500 truncate mt-1">
+                        <p className="text-base text-gray-500 truncate mt-1">
                           {profile?.email}
                         </p>
                       </div>
                       <div className="h-px bg-gray-100" />
                       <button
-                        className="w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors text-left font-medium"
+                        className="w-full px-4 py-3 text-base text-red-600 hover:bg-red-50 transition-colors text-left font-medium"
                         onClick={handleLogout}
                       >
                         Logout
@@ -293,7 +291,6 @@ export default function Header() {
                 </div>
               )}
             </div>
-
             {/* Mobile hamburger */}
             <button
               className="md:hidden p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors"

@@ -45,10 +45,10 @@ const recipeApi = baseApi.injectEndpoints({
     }),
 
     getAllRecipes: builder.query({
-      query: ({ page, limit, searchTerm }) => ({
+      query: ({ page, limit }) => ({
         url: `/recipe/all`,
         method: "GET",
-        params: { page, limit, searchTerm },
+        params: { page, limit },
       }),
 
       providesTags: ["Recipe"],
