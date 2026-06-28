@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useMobileNav } from "@/shared/MobileNavContext";
+import Cookies from "js-cookie";
 import {
   BookOpen,
   Calculator,
@@ -9,9 +10,11 @@ import {
   ShoppingCart,
   User,
   UtensilsCrossed,
+  X,
 } from "lucide-react";
+import { signOut } from "next-auth/react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 interface NavItem {
@@ -55,7 +58,19 @@ const navItems: NavItem[] = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isMobileNavOpen, closeMobileNav } = useMobileNav();
+
+  const token = Cookies.get("accessToken") ?? Cookies.get("token");
+
+  const handleLogout = async () => {
+    Cookies.remove("accessToken");
+    Cookies.remove("token");
+    Cookies.remove("forgetToken");
+    await signOut();
+    closeMobileNav();
+    router.push("/login");
+  };
 
   useEffect(() => {
     closeMobileNav();
@@ -110,12 +125,27 @@ export default function Sidebar() {
 
       <aside
         className={cn(
-          "fixed left-0  z-[60] h-[calc(100dvh-0px)] w-[280px] bg-white p-4 shadow-2xl transition-transform duration-300 ease-out md:hidden",
+          "fixed inset-0 z-[60] flex flex-col h-[100dvh] w-full bg-white p-5 transition-transform duration-300 ease-out md:hidden",
           isMobileNavOpen ? "translate-x-0" : "-translate-x-full",
         )}
         aria-label="Mobile navigation"
       >
-        <nav className="space-y-2">
+        <div className="flex items-center justify-between mb-2 pb-4">
+          <Link href="/" className="flex-shrink-0" onClick={closeMobileNav}>
+            <span className="font-viktor-script text-primary text-[26px] sm:text-[32px] leading-none select-none">
+              Tomatoes With Lemon Club
+            </span>
+          </Link>
+          <button
+            onClick={closeMobileNav}
+            className="p-1 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
+            aria-label="Close menu"
+          >
+            <X className="w-7 h-7" />
+          </button>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -123,18 +153,29 @@ export default function Sidebar() {
                 key={`mobile-${item.href}`}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-4 py-3 font-medium transition-colors",
+                  "flex items-center justify-between py-4 text-[17px] font-semibold transition-colors border-b border-gray-100",
                   isActive
-                    ? "bg-[#02248C1A] text-primary"
-                    : "text-slate-700 hover:bg-slate-200",
+                    ? "text-primary"
+                    : "text-[#0B3558] hover:text-primary",
                 )}
+                onClick={closeMobileNav}
               >
-                <span className="flex-shrink-0">{item.icon}</span>
-                <span className="text-sm">{item.label}</span>
+                <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
+
+        {token && (
+          <div className="mt-auto pt-6 pb-2">
+            <button
+              onClick={handleLogout}
+              className="flex items-center justify-center w-full rounded-md border border-[#0B3558] bg-white px-4 py-3.5 text-base font-semibold text-[#0B3558] hover:bg-gray-50 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        )}
       </aside>
     </>
   );

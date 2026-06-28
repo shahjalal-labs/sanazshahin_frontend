@@ -174,7 +174,7 @@ export default function Header() {
           {/* Logo */}
           <Link href={"/"}>
             <div className="flex-shrink-0">
-              <span className="font-viktor-script text-primary text-[40px] leading-none select-none">
+              <span className="font-viktor-script text-primary text-lg md:text-[40px] leading-none select-none">
                 Tomatoes With Lemon Club
               </span>
             </div>
