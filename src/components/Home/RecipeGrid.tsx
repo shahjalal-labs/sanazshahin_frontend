@@ -1,13 +1,15 @@
 "use client";
 
+import { useGetAvailableRecipesQuery } from "@/redux/api/mealApi";
 import {
   useGetAllRecipesQuery,
   useToggleRecipeBookmarkMutation,
 } from "@/redux/api/recipeApi";
+import Cookies from "js-cookie";
 import { Bookmark, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import RecipeCardSkeleton from "../ui/RecipeCardSkeleton";
 
 type RecipeItem = {
@@ -42,19 +44,67 @@ export default function RecipeGrid() {
   const [recipeType, setRecipeType] = useState("all");
   const [ingredient, setIngredient] = useState("all");
   const [feature, setFeature] = useState("all");
+  const [hasToken, setHasToken] = useState<boolean | null>(null);
   const searchQuery = searchParams.get("search")?.trim().toLowerCase() ?? "";
 
-  const { data, isLoading, error } = useGetAllRecipesQuery({
-    page: currentPage,
-    limit: 9,
+  useEffect(() => {
+    const token = Cookies.get("accessToken") ?? Cookies.get("token");
+    setHasToken(!!token);
+  }, []);
+
+  const {
+    data: allData,
+    isLoading: allLoading,
+    error: allError,
+  } = useGetAllRecipesQuery(
+    {
+      page: currentPage,
+      limit: 9,
+    },
+    { skip: hasToken === null || !hasToken },
+  );
+
+  const {
+    data: nonGenData,
+    isLoading: nonGenLoading,
+    error: nonGenError,
+  } = useGetAvailableRecipesQuery(undefined, {
+    skip: hasToken === null || hasToken,
   });
+
+  const isLoading =
+    hasToken === null ? true : hasToken ? allLoading : nonGenLoading;
+  const error =
+    hasToken === null ? undefined : hasToken ? allError : nonGenError;
 
   const [toggleBookmark] = useToggleRecipeBookmarkMutation();
 
-  const recipeData = data as RecipeListResponse | undefined;
-  const recipes = recipeData?.result?.recipes ?? [];
-  const totalPages = recipeData?.result?.meta?.totalPages ?? 1;
-  const activePage = recipeData?.result?.meta?.currentPage ?? currentPage;
+  const recipes = useMemo(() => {
+    if (hasToken) {
+      const recipeData = allData as RecipeListResponse | undefined;
+      return recipeData?.result?.recipes ?? [];
+    } else {
+      const recipeData = nonGenData as { result?: RecipeItem[] } | undefined;
+      return recipeData?.result ?? [];
+    }
+  }, [hasToken, allData, nonGenData]);
+
+  const totalPages = useMemo(() => {
+    if (hasToken) {
+      const recipeData = allData as RecipeListResponse | undefined;
+      return recipeData?.result?.meta?.totalPages ?? 1;
+    }
+    return 1;
+  }, [hasToken, allData]);
+
+  const activePage = useMemo(() => {
+    if (hasToken) {
+      const recipeData = allData as RecipeListResponse | undefined;
+      return recipeData?.result?.meta?.currentPage ?? currentPage;
+    }
+    return 1;
+  }, [hasToken, allData, currentPage]);
+
   const visibleRecipes = useMemo(() => {
     if (!searchQuery) {
       return recipes;
@@ -128,8 +178,11 @@ export default function RecipeGrid() {
 
   if (error) {
     return (
-      <div className="flex h-screen items-center justify-center text-red-500">
-        Error loading recipes. Please try again later.
+      <div className="flex h-screen flex-col items-center justify-center text-red-500">
+        <p>Error loading recipes. Please try again later.</p>
+        <pre className="mt-4 text-xs max-w-full overflow-auto px-4">
+          {JSON.stringify(error, null, 2)}
+        </pre>
       </div>
     );
   }
