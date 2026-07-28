@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-// import logo from "@/assets/logo.svg"
+import logo from "@/assets/fav.ico"
 // import logo from "@/assets/Logo.png";
 
 import { AuthSessionProvider } from "@/components/providers/AuthSessionProvider";
@@ -10,10 +10,10 @@ import { Toaster } from "sonner";
 // import logo from "@/assets/home/kkk-logo.png";
 
 export const metadata: Metadata = {
-  title: "sanazShahin frontend",
-  description: "A modern frontend for AI Meal generation",
+  title: "Tomatoes with lemon club",
+  description: "A delicious and healthy recipe for tomatoes with lemon",
   icons: {
-    // icon: logo.src,
+    icon: logo.src,
   },
 };
 

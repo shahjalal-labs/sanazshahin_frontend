@@ -159,7 +159,7 @@ export default function ProteinCalculator() {
 
     try {
       const resp = await fetch(
-        "http://206.162.244.144:4019/calculate-protein",
+        "https://api.tomatoeswithlemon.com/calculate-protein",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
