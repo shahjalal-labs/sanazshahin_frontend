@@ -9,6 +9,20 @@ const mealApi = baseApi.injectEndpoints({
       }),
       providesTags: ["meal"],
     }),
+    getAvailableScrappedRecipes: builder.query({
+      query: ({page,search}) => ({
+        url: `/recipe/scraped-recipes?page=${page}&search=${search}`,
+        method: "GET",
+      }),
+      providesTags: ["meal"],
+    }),
+    getScrappedRecipeDetails: builder.query({
+      query: (name) => ({
+        url: `/recipe/scraped-recipes/details/${name}`,
+        method: "GET",
+      }),
+      providesTags: ["meal"],
+    }),
 
     getUserMealPlans: builder.query({
       query: () => ({
@@ -42,4 +56,6 @@ export const {
   useGetUserMealPlansQuery,
   useCreateMealRecipeMutation,
   useMealPlanGenerateMutation,
+  useGetAvailableScrappedRecipesQuery,
+  useGetScrappedRecipeDetailsQuery,
 } = mealApi;
