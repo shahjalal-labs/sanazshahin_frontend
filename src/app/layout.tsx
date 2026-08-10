@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import logo from "@/assets/fav.ico"
+import logo from "@/assets/meal/favicon.ico"
 // import logo from "@/assets/Logo.png";
 
 import { AuthSessionProvider } from "@/components/providers/AuthSessionProvider";
