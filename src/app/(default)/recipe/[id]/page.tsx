@@ -1,11 +1,17 @@
-"use client"
+"use client";
 
 import ScrappedRecipeDetails from "@/components/Home/ScrappedRecipeDetails";
+import { useParams } from "next/navigation";
 
 const DetailsPage = () => {
+  const params = useParams();
+  const recipeName = Array.isArray(params.id)
+    ? params.id[0]
+    : (params.id ?? "");
+
   return (
-    <div>
-      <ScrappedRecipeDetails name="Pickled Watermelon Rind"></ScrappedRecipeDetails>
+    <div className="pt-20">
+      <ScrappedRecipeDetails name={decodeURIComponent(recipeName)} />
     </div>
   );
 };

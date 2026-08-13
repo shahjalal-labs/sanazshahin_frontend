@@ -25,7 +25,7 @@ const ScrappedRecipies = () => {
         <input className="border px-4  border-primary py-2 rounded-full" onChange={(e)=> setSearchTerm(e.target.value)} type="text" placeholder="Search recipes..." />
       </div>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
         {isLoading
           ? Array.from({ length: 6 }).map((_, index) => (
               <div
@@ -41,18 +41,18 @@ const ScrappedRecipies = () => {
           : recipes.map((recipe:any) => (
               <Link
                 key={recipe.link}
-                href={`/`}
+                href={`/recipe/${recipe.title}`}
                 // target="_blank"
-                // rel="noreferrer"
-                className="group overflow-hidden rounded-[24px] border border-blue-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.08)] transition-transform duration-200 hover:-translate-y-1"
+                // rel="noreferrer"               
               >
-                <div className="relative aspect-square overflow-hidden bg-slate-100">
+                <div className="relative aspect-square  bg-slate-100">
                   <Image
                     src={recipe.image}
                     alt={recipe.title}
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                    height={300}
+                    width={300}
+                    className="border h-80 w-full border-primary rounded-[14px] transition-transform duration-300 "
+                    // sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                   />
                 </div>
 

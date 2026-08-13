@@ -137,7 +137,11 @@ export default function Header() {
     const hasToken = Boolean(
       Cookies.get("accessToken") ?? Cookies.get("token"),
     );
-    if (!hasToken && pathname && !PUBLIC_PATHS.includes(pathname)) {
+    const isPublicPath =
+      !!pathname &&
+      (PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/recipe"));
+
+    if (!hasToken && pathname && !isPublicPath) {
       router.replace("/login");
     }
   }, [pathname, router]);
