@@ -1,5 +1,6 @@
 "use client";
 
+import logo from "@/assets/logo.png";
 import { useGetMyProfileQuery } from "@/redux/api/userApi";
 import { useMobileNav } from "@/shared/MobileNavContext";
 import Cookies from "js-cookie";
@@ -179,9 +180,7 @@ export default function Header() {
           {/* Logo */}
           <Link href={"/"}>
             <div className="flex-shrink-0">
-              <span className="font-viktor-script text-primary text-lg md:text-[40px] leading-none select-none">
-                Tomatoes With Lemon Club
-              </span>
+              <Image src={logo} alt="Logo" className="h-[75px] w-[75px]" />
             </div>
           </Link>
 
