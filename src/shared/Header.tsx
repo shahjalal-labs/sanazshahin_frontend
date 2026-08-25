@@ -1,6 +1,6 @@
 "use client";
 
-import logo from "@/assets/logo.png";
+import logo from "@/assets/tomatowlogo.png";
 import { useGetMyProfileQuery } from "@/redux/api/userApi";
 import { useMobileNav } from "@/shared/MobileNavContext";
 import Cookies from "js-cookie";
@@ -180,7 +180,7 @@ export default function Header() {
           {/* Logo */}
           <Link href={"/"}>
             <div className="flex-shrink-0">
-              <Image src={logo} alt="Logo" className="h-[75px] w-[75px]" />
+              <Image src={logo} alt="Logo" className="h-[72px] w-[300px]" />
             </div>
           </Link>
 
