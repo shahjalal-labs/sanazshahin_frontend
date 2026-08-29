@@ -176,19 +176,13 @@ export default function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm py-4">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-[72px] gap-4">
+        <div className="flex items-center justify-between h-[50px] md:h-[72px] gap-4">
           {/* Logo */}
           <Link href={"/"}>
             <div className="flex-shrink-0 font-viktor-script">
-              <Image src={logo} alt="Logo" className="h-[75px] w-[250px]" />
+              <Image src={logo} alt="Logo" className="h-[50px] w-[150px] md:h-[75px] md:w-[250px]" />
             </div>
           </Link>
-          {/* <Link href={"/"}>
-            <div className="flex-shrink-0 font-viktor-script text-primary text-2xl font-normal">
-             <h1>Tomatoes With</h1>
-             <h2>Lemon Club</h2>
-            </div>
-          </Link> */}
 
           {/* Search Bar — hidden on mobile, visible on sm+ */}
           <div className="hidden sm:flex flex-1 max-w-md mx-auto">
@@ -226,16 +220,6 @@ export default function Header() {
             >
               <SearchIcon />
             </button>
-            {/* Bell icon with notification badge */}
-            {/* <button
-              className="relative p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
-              aria-label="Notifications"
-              onClick={handleNotification}
-            >
-              <BellIcon />
-
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
-            </button> */}
             {token ? (
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -279,10 +263,10 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2 sm:gap-4">
+              <div className="hidden md:flex items-center gap-2 sm:gap-4">
                 <Link
                   href="/login"
-                  className="px-2 sm:px-4 py-2 text-base font-semibold text-primary hover:text-[#1a3a8f] transition-colors"
+                  className="px-2 sm:px-4 py-2 text-base font-semibold text-primary hover:text-[#1a3a8f] transition-colors hover:border hover:border-primary rounded-xl"
                 >
                   Log In
                 </Link>

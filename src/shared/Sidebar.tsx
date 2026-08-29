@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { useMobileNav } from "@/shared/MobileNavContext";
 import Cookies from "js-cookie";
+import logo from "@/assets/tomatoAnotherLogo.png";
 import {
   BookOpen,
   Calculator,
@@ -11,11 +12,13 @@ import {
   User,
   UtensilsCrossed,
   X,
+  LogIn,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import Image from "next/image";
 
 interface NavItem {
   label: string;
@@ -72,6 +75,11 @@ export default function Sidebar() {
     router.push("/login");
   };
 
+  const handleLogin = () => {
+    closeMobileNav();
+    router.push("/login");
+  };
+
   useEffect(() => {
     closeMobileNav();
   }, [pathname, closeMobileNav]);
@@ -112,8 +120,10 @@ export default function Sidebar() {
             );
           })}
         </nav>
+        {/* Removed desktop auth button - only mobile sidebar should have it */}
       </aside>
 
+      {/* Overlay */}
       <div
         className={cn(
           "fixed inset-0 z-[55] bg-black/30 transition-opacity duration-300 md:hidden",
@@ -123,6 +133,7 @@ export default function Sidebar() {
         aria-hidden="true"
       />
 
+      {/* Mobile Sidebar */}
       <aside
         className={cn(
           "fixed inset-0 z-[60] flex flex-col h-[100dvh] w-full bg-white p-5 transition-transform duration-300 ease-out md:hidden",
@@ -130,11 +141,12 @@ export default function Sidebar() {
         )}
         aria-label="Mobile navigation"
       >
-        <div className="flex items-center justify-between mb-2 pb-4">
-          <Link href="/" className="flex-shrink-0" onClick={closeMobileNav}>
-            <span className="font-viktor-script text-primary text-2xl leading-none select-none">
-              Tomatoes With Lemon Club
-            </span>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-2 pb-4 border-b border-gray-100">
+          <Link href={"/"}>
+            <div className="flex-shrink-0 font-viktor-script">
+              <Image src={logo} alt="Logo" className="h-[50px] w-[170px]" />
+            </div>
           </Link>
           <button
             onClick={closeMobileNav}
@@ -145,6 +157,7 @@ export default function Sidebar() {
           </button>
         </div>
 
+        {/* Navigation Links */}
         <nav className="flex-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
@@ -166,16 +179,26 @@ export default function Sidebar() {
           })}
         </nav>
 
-        {token && (
-          <div className="mt-auto pt-6 pb-2">
+        {/* Mobile Auth Button - Shows Login when no token, Logout when token exists */}
+        <div className="mt-auto pt-6 pb-2">
+          {token ? (
             <button
               onClick={handleLogout}
-              className="flex items-center justify-center w-full rounded-md border border-[#0B3558] bg-white px-4 py-3.5 text-base font-semibold text-[#0B3558] hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-center w-full gap-2 rounded-md border border-red-200 bg-white px-4 py-3.5 text-base font-semibold text-red-600 hover:bg-red-50 transition-colors"
             >
+              <LogIn className="w-5 h-5 rotate-180" />
               Logout
             </button>
-          </div>
-        )}
+          ) : (
+            <button
+              onClick={handleLogin}
+              className="flex items-center justify-center w-full gap-2 rounded-md bg-primary px-4 py-3.5 text-base font-semibold text-white hover:opacity-90 transition-colors"
+            >
+              <LogIn className="w-5 h-5" />
+              Login
+            </button>
+          )}
+        </div>
       </aside>
     </>
   );
