@@ -1,6 +1,6 @@
 "use client";
 
-import logo from "@/assets/tomatowlogo.png";
+import logo from "@/assets/tomatoAnotherLogo.png";
 import { useGetMyProfileQuery } from "@/redux/api/userApi";
 import { useMobileNav } from "@/shared/MobileNavContext";
 import Cookies from "js-cookie";
@@ -179,10 +179,16 @@ export default function Header() {
         <div className="flex items-center justify-between h-[72px] gap-4">
           {/* Logo */}
           <Link href={"/"}>
-            <div className="flex-shrink-0">
-              <Image src={logo} alt="Logo" className="h-[72px] w-[300px]" />
+            <div className="flex-shrink-0 font-viktor-script">
+              <Image src={logo} alt="Logo" className="h-[75px] w-[250px]" />
             </div>
           </Link>
+          {/* <Link href={"/"}>
+            <div className="flex-shrink-0 font-viktor-script text-primary text-2xl font-normal">
+             <h1>Tomatoes With</h1>
+             <h2>Lemon Club</h2>
+            </div>
+          </Link> */}
 
           {/* Search Bar — hidden on mobile, visible on sm+ */}
           <div className="hidden sm:flex flex-1 max-w-md mx-auto">
