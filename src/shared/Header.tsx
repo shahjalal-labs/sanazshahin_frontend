@@ -1,6 +1,6 @@
 "use client";
 
-import logo from "@/assets/tomatoAnotherLogo.png";
+// import logo from "@/assets/tomatoAnotherLogo.png";
 import { useGetMyProfileQuery } from "@/redux/api/userApi";
 import { useMobileNav } from "@/shared/MobileNavContext";
 import Cookies from "js-cookie";
@@ -178,9 +178,14 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-[50px] md:h-[72px] gap-4">
           {/* Logo */}
-          <Link href={"/"}>
+          {/* <Link href={"/"}>
             <div className="flex-shrink-0 font-viktor-script">
               <Image src={logo} alt="Logo" className="h-[50px] w-[150px] md:h-[75px] md:w-[250px]" />
+            </div>
+          </Link> */}
+          <Link href="/">
+            <div className="flex-shrink-0 font-viktor-script text-primary text-[22px] md:text-[40px] leading-none font-normal">
+              Tomatoes With Lemon Club
             </div>
           </Link>
 

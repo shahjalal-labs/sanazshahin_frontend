@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { useMobileNav } from "@/shared/MobileNavContext";
 import Cookies from "js-cookie";
-import logo from "@/assets/tomatoAnotherLogo.png";
+// import logo from "@/assets/tomatoAnotherLogo.png";
 import {
   BookOpen,
   Calculator,
@@ -143,9 +143,14 @@ export default function Sidebar() {
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-2 pb-4 border-b border-gray-100">
-          <Link href={"/"}>
+          {/* <Link href={"/"}>
             <div className="flex-shrink-0 font-viktor-script">
               <Image src={logo} alt="Logo" className="h-[50px] w-[170px]" />
+            </div>
+          </Link> */}
+            <Link href="/">
+            <div className="flex-shrink-0 font-viktor-script text-primary text-[25px] md:text-[40px] leading-none font-normal">
+              Tomatoes With Lemon Club
             </div>
           </Link>
           <button
