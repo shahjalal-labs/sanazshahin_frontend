@@ -189,8 +189,8 @@ export default function Header() {
             </div>
           </Link>
 
-          {/* Search Bar — hidden on mobile, visible on sm+ */}
-          <div className="hidden sm:flex flex-1 max-w-md mx-auto">
+          {/* Search Bar hidden per user request */}
+          {/* <div className="hidden sm:flex flex-1 max-w-md mx-auto">
             <div className="flex items-center w-full border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm focus-within:ring-2 focus-within:ring-[#1a237e]/30 transition-all">
               <input
                 type="text"
@@ -213,18 +213,11 @@ export default function Header() {
                 <SearchIcon />
               </button>
             </div>
-          </div>
+          </div> */}
 
           {/* Right Actions */}
           <div className="flex items-center gap-2">
-            {/* Mobile search toggle */}
-            <button
-              className="sm:hidden p-2 rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
-              onClick={() => setMobileSearchOpen((v) => !v)}
-              aria-label="Toggle search"
-            >
-              <SearchIcon />
-            </button>
+            {/* Mobile search toggle hidden */}
             {token ? (
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -296,8 +289,8 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Search Bar — shown when toggled */}
-      {mobileSearchOpen && (
+      {/* Mobile Search Bar hidden per user request */}
+      {/* {mobileSearchOpen && (
         <div className="sm:hidden absolute left-0 right-0 top-full bg-white border-b border-gray-100 shadow-md">
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center w-full border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm focus-within:ring-2 focus-within:ring-[#1a237e]/30 transition-all">
@@ -325,7 +318,7 @@ export default function Header() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </header>
   );
 }
